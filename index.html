@@ -108,11 +108,35 @@
             </div>
           </div>
 
-          <!-- ファイル選択の結果を知らせる場所（aria-live：内容が変わると読み上げソフトが読む） -->
+          <!-- 取り込み・保存の進み具合と結果を知らせる場所（aria-live：内容が変わると読み上げソフトが読む） -->
           <p id="upload-status" class="status-message" role="status" aria-live="polite" hidden></p>
 
+          <!-- 取り込みの確認（ファイルを選んだあとに表示。動きは src/ui/importPanel.js） -->
+          <section id="import-panel" class="import-panel" aria-labelledby="import-heading" hidden>
+            <h3 id="import-heading" class="section-title">取り込みの確認</h3>
+            <p id="import-summary" class="note"></p>
+            <ol id="import-file-list" class="import-file-list"></ol>
+            <label for="import-title" class="field-label">論文タイトル（任意）</label>
+            <input type="text" id="import-title" class="input" maxlength="500" autocomplete="off"
+                   placeholder="空欄の場合は「タイトル未設定」として保存します">
+            <div class="button-row import-actions">
+              <button type="button" id="import-save" class="button button--primary">ライブラリに保存</button>
+              <button type="button" id="import-cancel" class="button">取り消す</button>
+            </div>
+          </section>
+
+          <!-- 保存場所についての大切な案内 -->
+          <div class="storage-notice">
+            <p>
+              <strong>開発版のため、論文はこのブラウザの中（IndexedDB）にだけ保存されます。</strong>
+              ブラウザの閲覧データを削除すると消え、別の端末や別のブラウザでは表示されません。
+              クラウド保存とバックアップは開発予定です。元のファイルは必ず手元にも残してください。
+            </p>
+            <p id="storage-usage" class="note"></p>
+          </div>
+
           <p class="note">
-            マーカー・メモ・本文（OCR結果を含む）の検索、ファイルの読み込み・保存は<strong>開発予定</strong>です。
+            マーカー・メモ・本文（OCR結果を含む）の検索は<strong>開発予定</strong>です。
           </p>
 
           <!-- 論文一覧（中身は src/ui/library.js が作る） -->
@@ -120,7 +144,6 @@
             <h3 id="paper-list-heading" class="section-title">論文一覧</h3>
             <p id="search-result-count" class="note" aria-live="polite"></p>
             <ul id="paper-list" class="paper-list"></ul>
-            <p class="note">「サンプル」と表示された論文は、表示確認用の架空のデータです。</p>
           </section>
         </section>
 
@@ -129,7 +152,7 @@
           <div class="viewer-header">
             <a href="#/library" class="back-link">← 論文ライブラリに戻る</a>
             <h2 id="viewer-heading" class="viewer-title" tabindex="-1">論文が選択されていません</h2>
-            <span id="viewer-sample-tag" class="tag tag--sample" hidden>サンプル（架空の論文）</span>
+            <span id="viewer-title-tag" class="tag tag--muted" hidden>タイトル未設定（ファイル名を表示）</span>
           </div>
 
           <!-- 論文が見つからないときの案内 -->
@@ -140,36 +163,34 @@
             <!-- 左側：PDF・画像の表示エリア（いちばん広く取る） -->
             <section class="document-area" aria-label="PDF・画像の表示">
 
-              <!-- ページ操作（未実装） -->
-              <div class="document-toolbar" role="toolbar" aria-label="ページ操作（開発予定）">
+              <!-- ページ操作（動きは src/ui/viewer.js） -->
+              <div class="document-toolbar" role="toolbar" aria-label="ページ操作">
                 <div class="toolbar-group">
-                  <button type="button" class="icon-button" aria-label="前のページ（開発予定）" disabled>
+                  <button type="button" id="page-prev" class="icon-button" aria-label="前のページ" disabled>
                     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
                   </button>
-                  <span id="page-indicator" class="page-indicator">― / ― ページ</span>
-                  <button type="button" class="icon-button" aria-label="次のページ（開発予定）" disabled>
+                  <span id="page-indicator" class="page-indicator" aria-live="polite">― / ― ページ</span>
+                  <button type="button" id="page-next" class="icon-button" aria-label="次のページ" disabled>
                     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                   </button>
                 </div>
                 <div class="toolbar-group">
-                  <button type="button" class="icon-button" aria-label="縮小（開発予定）" disabled>
+                  <button type="button" id="zoom-out" class="icon-button" aria-label="縮小" disabled>
                     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg>
                   </button>
-                  <span class="zoom-indicator">100%</span>
-                  <button type="button" class="icon-button" aria-label="拡大（開発予定）" disabled>
+                  <!-- 100% = 表示エリアの幅に合わせた大きさ -->
+                  <span id="zoom-indicator" class="zoom-indicator" title="100% は表示エリアの幅に合わせた大きさです">100%</span>
+                  <button type="button" id="zoom-in" class="icon-button" aria-label="拡大" disabled>
                     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
                   </button>
                 </div>
-                <!-- OCRの状態表示（未実装） -->
-                <p id="ocr-status" class="ocr-status">OCR：開発予定</p>
+                <!-- 表示中のページの文字情報の状態（OCRは開発予定） -->
+                <p id="ocr-status" class="ocr-status"></p>
               </div>
 
-              <!-- ここに PDF.js の描画結果や画像を表示する予定 -->
-              <div id="document-display" class="document-display">
-                <!-- 紙面のイメージ（縦横比 A4）。実際の PDF・画像に置き換わる -->
-                <div class="page-placeholder">
-                  <p>論文のPDF・画像がここに表示されます（開発予定）。</p>
-                </div>
+              <!-- PDF のページ（canvas）や画像を表示する場所。tabindex="0" でキーボード操作を受け付ける -->
+              <div id="document-display" class="document-display" tabindex="0"
+                   aria-label="論文の表示エリア（PageUp・PageDown でページ移動、＋・− で拡大・縮小）">
               </div>
             </section>
 

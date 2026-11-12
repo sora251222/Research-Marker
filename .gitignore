@@ -4,6 +4,12 @@ node_modules/
 # Vite が作る公開用ファイル（npm run build で再作成できる）
 dist/
 
+# PDF.js の補助ファイル（npm run dev / build のときに node_modules からコピーされる）
+public/pdfjs/
+
+# 動作確認用の一時ファイル
+__*-check.html
+
 # 秘密情報を入れるファイル（絶対に記録しない）
 .env
 .env.*

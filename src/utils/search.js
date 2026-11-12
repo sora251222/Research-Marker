@@ -22,7 +22,7 @@ export function normalizeForSearch(text) {
 /**
  * 1件の論文が検索語に一致するか判定する。
  * 検索語を空白で区切り、すべての語が「タイトル・著者・雑誌名・発行年・DOI」の
- * どこかに含まれていれば一致とする（AND検索）。
+ * どこかに含まれていれば一致とする（AND検索）。タイトル未設定の論文は、ファイル名でも探せる。
  */
 export function paperMatchesQuery(paper, query) {
   const keywords = normalizeForSearch(query).split(' ').filter(Boolean);
@@ -33,6 +33,7 @@ export function paperMatchesQuery(paper, query) {
   const searchableText = normalizeForSearch(
     [
       paper.title,
+      paper.displayName,
       (paper.authors ?? []).join(' '),
       paper.journal,
       paper.year,

@@ -5,7 +5,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "copy-pdfjs-assets": "node scripts/copy-pdfjs-assets.mjs",
+    "predev": "npm run copy-pdfjs-assets",
     "dev": "vite",
+    "prebuild": "npm run copy-pdfjs-assets",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run --passWithNoTests"
@@ -13,5 +16,8 @@
   "devDependencies": {
     "vite": "8.3.8",
     "vitest": "5.1.0"
+  },
+  "dependencies": {
+    "pdfjs-dist": "6.5.438"
   }
 }

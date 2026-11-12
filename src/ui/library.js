@@ -1,17 +1,21 @@
-// 論文ライブラリ画面：論文一覧の表示・検索・ファイル選択
+// 論文ライブラリ画面：論文一覧の表示・検索・ファイル選択・保存場所の案内
 
 import { appState } from '../state.js';
 import { filterPapers } from '../utils/search.js';
+import { formatBytes, formatDateTime } from '../utils/format.js';
 import { paperRouteHash } from '../router.js';
+import { listPapers, getStorageStatus } from '../storage/paperRepository.js';
+import { startImport } from './importPanel.js';
 
 let listElement;
 let resultCountElement;
-let uploadStatusElement;
+let storageUsageElement;
+let loadError = null; // 一覧を読み込めなかったときのメッセージ
 
 export function initLibrary() {
   listElement = document.getElementById('paper-list');
   resultCountElement = document.getElementById('search-result-count');
-  uploadStatusElement = document.getElementById('upload-status');
+  storageUsageElement = document.getElementById('storage-usage');
 
   const searchForm = document.getElementById('search-form');
   const searchInput = document.getElementById('search-input');
@@ -29,12 +33,25 @@ export function initLibrary() {
   });
 
   fileInput.addEventListener('change', () => {
-    showSelectedFiles(fileInput.files);
+    const files = Array.from(fileInput.files ?? []);
     // 同じファイルをもう一度選んだときも change が起きるように、選択を空に戻す
     fileInput.value = '';
+    startImport(files);
   });
 
   renderPaperList();
+}
+
+/** 保存されている論文を読み込み直して、一覧と容量の表示を更新する */
+export async function refreshLibrary() {
+  try {
+    appState.papers = await listPapers();
+    loadError = null;
+  } catch (error) {
+    loadError = `保存されている論文を読み込めませんでした（${error?.message ?? '原因不明のエラー'}）。`;
+  }
+  renderPaperList();
+  await updateStorageUsage();
 }
 
 /** 検索語に合う論文だけを一覧に表示する */
@@ -45,8 +62,11 @@ export function renderPaperList() {
   // 一覧を作り直す。文字は textContent で入れる（外部の文字列をHTMLとして解釈させない安全な方法）
   listElement.replaceChildren(...matchedPapers.map(createPaperItem));
 
-  if (appState.papers.length === 0) {
-    resultCountElement.textContent = '論文はまだ登録されていません。';
+  resultCountElement.classList.toggle('is-error', Boolean(loadError));
+  if (loadError) {
+    resultCountElement.textContent = loadError;
+  } else if (appState.papers.length === 0) {
+    resultCountElement.textContent = '論文はまだ登録されていません。「PDF・画像を追加」から登録できます。';
   } else if (matchedPapers.length === 0) {
     resultCountElement.textContent = `「${query}」に一致する論文はありません。`;
   } else if (query) {
@@ -68,20 +88,22 @@ function createPaperItem(paper) {
   title.className = 'paper-title';
   const link = document.createElement('a');
   link.href = paperRouteHash(paper.id);
-  link.textContent = paper.title;
+  // タイトルが未設定なら、ファイル名を表示する（タイトルを推測では作らない）
+  link.textContent = paper.title ?? paper.displayName;
   title.append(link);
 
   const meta = document.createElement('p');
   meta.className = 'paper-meta';
+  const kindText = paper.sourceKind === 'pdf' ? `PDF・${paper.pageCount}ページ` : `画像・${paper.pageCount}枚`;
   meta.append(
-    createSpan('paper-authors', paper.authors.join(', ')),
-    createSpan('paper-journal', paper.journal),
-    createSpan('paper-year', `${paper.year}年`),
-    createSpan('tag', paper.fileTypeLabel)
+    createSpan('', kindText),
+    createSpan('', formatBytes(paper.totalBytes)),
+    createSpan('', `登録 ${formatDateTime(paper.createdAt)}`)
   );
-  if (paper.isSample) {
-    meta.append(createSpan('tag tag--sample', 'サンプル'));
+  if (!paper.title) {
+    meta.append(createSpan('tag tag--muted', 'タイトル未設定'));
   }
+  meta.append(createSpan('tag', 'このブラウザに保存'));
 
   article.append(title, meta);
   item.append(article);
@@ -90,25 +112,22 @@ function createPaperItem(paper) {
 
 function createSpan(className, text) {
   const span = document.createElement('span');
-  span.className = className;
+  if (className) span.className = className;
   span.textContent = text;
   return span;
 }
 
-/**
- * ファイルが選ばれたときの表示。
- * フェーズ1では読み込み・保存をしないので、「まだ登録されていない」ことをはっきり伝える。
- */
-function showSelectedFiles(fileList) {
-  const files = Array.from(fileList ?? []);
-  if (files.length === 0) {
-    uploadStatusElement.hidden = true;
-    return;
+/** ブラウザ内の保存容量の目安を表示する */
+async function updateStorageUsage() {
+  const { usage, quota, persisted } = await getStorageStatus();
+  const parts = [];
+  if (usage !== null && quota !== null) {
+    parts.push(`このブラウザでの使用量：${formatBytes(usage)}（上限の目安 ${formatBytes(quota)}）`);
   }
-
-  const names = files.map((file) => file.name).join('、');
-  uploadStatusElement.textContent =
-    `${files.length}件のファイルを選択しました（${names}）。` +
-    'ファイルの読み込み・保存は次のフェーズで実装予定のため、まだ論文として登録されていません。';
-  uploadStatusElement.hidden = false;
+  if (persisted === true) {
+    parts.push('容量不足時に自動で消されにくい設定：有効');
+  } else if (persisted === false) {
+    parts.push('容量不足時に自動で消されにくい設定：未設定（ブラウザが許可しない場合があります）');
+  }
+  storageUsageElement.textContent = parts.join('／');
 }

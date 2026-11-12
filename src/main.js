@@ -5,17 +5,23 @@ import { appState } from './state.js';
 import { startRouter } from './router.js';
 import { applyViewToPage, moveFocusAfterNavigation } from './ui/navigation.js';
 import { initSidebar } from './ui/sidebar.js';
-import { initLibrary } from './ui/library.js';
-import { showPaperInViewer } from './ui/viewer.js';
+import { initLibrary, refreshLibrary } from './ui/library.js';
+import { initImportPanel } from './ui/importPanel.js';
+import { initViewer, showPaperInViewer, closeViewer } from './ui/viewer.js';
 
 initSidebar();
 initLibrary();
+initImportPanel({ onSaved: refreshLibrary });
+initViewer();
+refreshLibrary();
 
 startRouter((route, { isInitial }) => {
   appState.route = route;
 
   if (route.view === 'viewer') {
     showPaperInViewer(route.paperId);
+  } else {
+    closeViewer(); // 閲覧画面を離れたら、PDF・画像のメモリを解放する
   }
 
   applyViewToPage(route);

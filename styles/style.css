@@ -23,6 +23,7 @@
   --color-accent-hover: #244A3D;  /* アクセントのホバー時 */
   --color-viewer-bg: #F0F0EE;     /* 論文表示エリアの背景（紙面を引き立てる） */
   --color-focus: #2D5A4A;         /* キーボード操作時のフォーカス枠 */
+  --color-danger: #A1281F;        /* エラー（文字でも「エラー：」と示し、色だけに頼らない） */
 
   /* マーカーの色（本文の上に半透明で重ねる想定） */
   --marker-yellow: rgba(250, 204, 21, 0.38);
@@ -516,7 +517,8 @@ body:not([data-view]) #library-view {
   color: var(--color-text-muted);
 }
 
-/* 操作の結果を知らせるメッセージ（ファイル選択など） */
+/* 操作の結果を知らせるメッセージ（取り込み・保存など）
+   種類は「処理中：」「完了：」「エラー：」などの文字でも示す */
 .status-message {
   margin-bottom: var(--space-3);
   padding: var(--space-3) var(--space-4);
@@ -524,6 +526,41 @@ body:not([data-view]) #library-view {
   border-radius: var(--radius-sm);
   background-color: var(--color-surface);
   font-size: var(--font-size-meta);
+  overflow-wrap: anywhere;
+}
+
+.status-message strong {
+  font-weight: var(--font-weight-medium);
+}
+
+.status-message--progress,
+.status-message--info {
+  border-left-color: var(--color-text-muted);
+}
+
+.status-message--error {
+  border-left-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.status-message__link {
+  white-space: nowrap;
+}
+
+/* 一覧を読み込めなかったときの文字 */
+.note.is-error {
+  color: var(--color-danger);
+}
+
+/* 控えめなラベル（タイトル未設定など） */
+.tag--muted {
+  color: var(--color-text-muted);
+}
+
+/* 小さめのボタン（並べ替えなど） */
+.button--small {
+  min-height: 2.5rem;
+  padding: var(--space-1) var(--space-3);
 }
 
 /* 無効（未実装）の入力欄 */
@@ -570,6 +607,98 @@ body:not([data-view]) #library-view {
 
 .library-actions ~ .note {
   margin-bottom: var(--space-6);
+}
+
+/* 保存場所の案内：目立ちすぎないよう、淡い背景と細い線だけで区切る */
+.storage-notice {
+  margin-bottom: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-sidebar);
+  font-size: var(--font-size-meta);
+}
+
+.storage-notice strong {
+  font-weight: var(--font-weight-medium);
+}
+
+.storage-notice .note {
+  margin-top: var(--space-2);
+}
+
+/* 取り込みの確認パネル */
+.import-panel {
+  margin-bottom: var(--space-5);
+  padding: var(--space-4) var(--space-5) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+}
+
+.import-panel > * + * {
+  margin-top: var(--space-3);
+}
+
+.import-file-list {
+  margin: var(--space-3) 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--color-border);
+}
+
+.import-file {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* PDF は番号とプレビューがないので、名前だけの1列にする */
+.import-file:not(:has(.import-file__order)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.import-file__order {
+  min-width: 1.75rem;
+  color: var(--color-text-muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.import-file__thumb {
+  width: 3rem;
+  height: 3.75rem;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background-color: var(--color-sidebar);
+}
+
+.import-file__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.import-file__name {
+  overflow-wrap: anywhere;
+}
+
+.import-file__meta {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-meta);
+}
+
+.import-file__actions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.import-actions {
+  margin-top: var(--space-4);
 }
 
 /* 論文一覧：カードではなく、余白と薄い区切り線で並べる */
@@ -721,27 +850,38 @@ body[data-view="viewer"] main {
 
 /* 論文の表示エリア：画面の高さいっぱいに取り、中でスクロールする */
 .document-display {
-  display: flex;
-  justify-content: center;
   min-height: 70vh;
   max-height: calc(100vh - 11rem);
   padding: var(--space-6) var(--space-5);
-  overflow: auto;
+  overflow: auto; /* 拡大したときは、縦にも横にもスクロールできる */
 }
 
-/* 紙面のイメージ：縦横比（A4）を保ったまま、幅に合わせて縮む */
-.page-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  max-width: 46rem;
-  aspect-ratio: 1 / 1.414;
-  padding: var(--space-6);
+/* ページの台紙：大きさは JavaScript が元のページの縦横比から計算して指定する。
+   拡大して表示エリアより広くなっても左端が切れないよう、margin で中央に寄せる */
+.page-surface {
+  position: relative; /* 将来、文字レイヤーやマーカーをこの上に重ねるための基準 */
+  margin: 0 auto;
   background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
+  box-shadow: 0 0 0 1px var(--color-border);
+}
+
+.page-canvas,
+.page-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* 読み込み中・エラーなどの案内 */
+.display-message {
+  max-width: 36rem;
+  margin: var(--space-7) auto;
   color: var(--color-text-muted);
   text-align: center;
+}
+
+.display-message--error {
+  color: var(--color-danger);
 }
 
 /* 右パネル：控えめに。見出しを押すと開閉できる */
@@ -882,7 +1022,7 @@ details[open] > .panel-title::after {
   }
 
   .document-display {
-    max-height: none;
+    max-height: 80vh;
     min-height: 0;
   }
 }
@@ -985,8 +1125,17 @@ details[open] > .panel-title::after {
     padding: var(--space-3);
   }
 
-  .page-placeholder {
-    padding: var(--space-4);
+  .import-file {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .import-file__thumb {
+    display: none; /* 狭い画面ではプレビューを省き、名前と操作ボタンを優先する */
+  }
+
+  .import-file__actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
   }
 
   .ocr-status {
