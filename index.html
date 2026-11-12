@@ -11,30 +11,42 @@
 </head>
 <body>
 
+  <!-- JavaScript が無効なときだけ表示される案内 -->
+  <noscript>
+    <p class="noscript-message">Research Marker を使うには、ブラウザの JavaScript を有効にしてください。</p>
+  </noscript>
+
   <!-- 画面全体の枠：左にサイドバー、右にメインの列を並べる -->
   <div class="app-shell">
 
     <!-- ========== サイドバー（ヘッダー）：アプリ名とメニュー ========== -->
     <header class="sidebar">
-      <h1 class="app-name">
-        <a href="#library-view">
-          <!-- 狭い画面でも分かるように、頭文字の小さな印を添える -->
-          <span class="app-mark" aria-hidden="true">RM</span>
-          <span class="app-name-text">Research Marker</span>
-        </a>
-      </h1>
+      <div class="sidebar-top">
+        <h1 class="app-name">
+          <a href="#/library">
+            <!-- 狭い画面でも分かるように、頭文字の小さな印を添える -->
+            <span class="app-mark" aria-hidden="true">RM</span>
+            <span class="app-name-text">Research Marker</span>
+          </a>
+        </h1>
+        <!-- サイドバーの開閉ボタン（動きは src/ui/sidebar.js） -->
+        <button type="button" id="sidebar-toggle" class="icon-button sidebar-toggle"
+                aria-controls="main-nav" aria-expanded="true" aria-label="サイドバーを折りたたむ">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M9.5 4.5v15"/></svg>
+        </button>
+      </div>
 
-      <nav class="main-nav" aria-label="メインメニュー">
+      <nav id="main-nav" class="main-nav" aria-label="メインメニュー">
         <ul>
-          <!-- 画面の切り替えは、今はリンク（#…）と CSS で行う -->
+          <!-- data-nav：今どのメニューを選んでいるかを JavaScript が判断するための印 -->
           <li>
-            <a class="nav-link" href="#library-view">
+            <a class="nav-link" href="#/library" data-nav="library">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h6v14H4zM14 5h6v14h-6z"/></svg>
               <span class="nav-label">論文ライブラリ</span>
             </a>
           </li>
           <li>
-            <a class="nav-link" href="#upload-area">
+            <a class="nav-link" href="#/upload" data-nav="upload">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>
               <span class="nav-label">論文を追加</span>
             </a>
@@ -53,7 +65,7 @@
             </span>
           </li>
           <li>
-            <a class="nav-link" href="#settings-view">
+            <a class="nav-link" href="#/settings" data-nav="settings">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
               <span class="nav-label">設定</span>
             </a>
@@ -69,18 +81,18 @@
         <!-- ========== 画面1：論文ライブラリ（論文の一覧と検索） ========== -->
         <section id="library-view" class="view" aria-labelledby="library-heading">
           <div class="page-header">
-            <h2 id="library-heading" class="page-title">論文ライブラリ</h2>
+            <!-- tabindex="-1"：画面を切り替えたとき、JavaScript から見出しにフォーカスを移せるようにする -->
+            <h2 id="library-heading" class="page-title" tabindex="-1">論文ライブラリ</h2>
             <p class="page-lead">保存した論文を探して、開いて読むことができます。</p>
           </div>
 
           <!-- 検索とアップロードを1行にまとめた操作エリア -->
           <div class="library-actions">
-            <!-- 論文検索欄（検索機能は未実装） -->
+            <!-- 論文検索欄：入力すると一覧がすぐに絞り込まれる -->
             <form id="search-form" class="search-form" role="search">
               <label for="search-input" class="visually-hidden">論文を検索</label>
               <input type="search" id="search-input" name="keyword" class="input"
-                     placeholder="タイトル・著者・マーカー・メモで検索">
-              <button type="submit" class="button button--ghost" disabled>検索（開発予定）</button>
+                     placeholder="タイトル・著者・雑誌名・発行年で検索" autocomplete="off">
             </form>
 
             <!-- アップロード（PDF・JPEG・PNG。画像は複数枚を1件の論文にまとめる予定） -->
@@ -96,55 +108,34 @@
             </div>
           </div>
 
+          <!-- ファイル選択の結果を知らせる場所（aria-live：内容が変わると読み上げソフトが読む） -->
+          <p id="upload-status" class="status-message" role="status" aria-live="polite" hidden></p>
+
           <p class="note">
-            対応予定：通常のPDF・スキャンPDF・画像（JPEG・PNG、複数枚で1件の論文）。
-            ファイルの読み込み・保存は<strong>開発予定</strong>のため、今は選択しても何も起きません。
+            マーカー・メモ・本文（OCR結果を含む）の検索、ファイルの読み込み・保存は<strong>開発予定</strong>です。
           </p>
 
-          <!-- 論文一覧（今はサンプル表示。保存機能は未実装） -->
+          <!-- 論文一覧（中身は src/ui/library.js が作る） -->
           <section class="paper-list-area" aria-labelledby="paper-list-heading">
             <h3 id="paper-list-heading" class="section-title">論文一覧</h3>
-            <p class="note">以下は表示確認用の<strong>サンプル（架空の論文）</strong>です。</p>
-            <ul id="paper-list" class="paper-list">
-              <li class="paper-item">
-                <!-- data-paper-id：将来 JavaScript で「どの論文か」を見分けるための印 -->
-                <article data-paper-id="sample-1">
-                  <h4 class="paper-title">
-                    <a href="#viewer-view">【サンプル】日本語の医学論文のタイトルがここに入ります：長いタイトルでも自然に折り返して表示されることを確認するための例文です</a>
-                  </h4>
-                  <p class="paper-meta">
-                    <span class="paper-authors">山田太郎, 鈴木花子, 佐藤一郎</span>
-                    <span class="paper-journal">サンプル医学雑誌</span>
-                    <span class="paper-year">2024年</span>
-                    <span class="tag">通常PDF</span>
-                  </p>
-                </article>
-              </li>
-              <li class="paper-item">
-                <article data-paper-id="sample-2">
-                  <h4 class="paper-title">
-                    <a href="#viewer-view">【サンプル】Title of an English paper for layout testing</a>
-                  </h4>
-                  <p class="paper-meta">
-                    <span class="paper-authors">Smith J, Brown A</span>
-                    <span class="paper-journal">Sample J Med</span>
-                    <span class="paper-year">2023年</span>
-                    <span class="tag">画像（3枚）</span>
-                  </p>
-                </article>
-              </li>
-            </ul>
+            <p id="search-result-count" class="note" aria-live="polite"></p>
+            <ul id="paper-list" class="paper-list"></ul>
+            <p class="note">「サンプル」と表示された論文は、表示確認用の架空のデータです。</p>
           </section>
         </section>
 
         <!-- ========== 画面2：論文閲覧（PDF・画像の表示とマーカー・メモ） ========== -->
         <section id="viewer-view" class="view" aria-labelledby="viewer-heading">
           <div class="viewer-header">
-            <a href="#library-view" class="back-link">← 論文ライブラリに戻る</a>
-            <h2 id="viewer-heading" class="viewer-title">【サンプル】日本語の医学論文のタイトルがここに入ります</h2>
+            <a href="#/library" class="back-link">← 論文ライブラリに戻る</a>
+            <h2 id="viewer-heading" class="viewer-title" tabindex="-1">論文が選択されていません</h2>
+            <span id="viewer-sample-tag" class="tag tag--sample" hidden>サンプル（架空の論文）</span>
           </div>
 
-          <div class="viewer-layout">
+          <!-- 論文が見つからないときの案内 -->
+          <p id="viewer-message" class="note" hidden></p>
+
+          <div id="viewer-layout" class="viewer-layout">
 
             <!-- 左側：PDF・画像の表示エリア（いちばん広く取る） -->
             <section class="document-area" aria-label="PDF・画像の表示">
@@ -183,7 +174,7 @@
             </section>
 
             <!-- 右側：パネル（書誌情報・マーカー・メモ・参考文献） -->
-            <!-- details / summary：見出しを押すと中身を開閉できる HTML の部品（JavaScript 不要） -->
+            <!-- details / summary：見出しを押すと中身を開閉できる HTML の部品 -->
             <aside class="side-panel" aria-label="論文の情報とメモ">
 
               <!-- 書誌情報（取得できない項目は「未取得」と表示する） -->
@@ -221,11 +212,11 @@
                 </ul>
               </details>
 
-              <!-- メモ入力 -->
+              <!-- メモ入力（保存機能がないため、入力欄も無効にしておく） -->
               <details class="panel-section" open>
                 <summary class="panel-title">メモ</summary>
                 <label for="memo-input" class="field-label">選択中のマーカーへのメモ</label>
-                <textarea id="memo-input" name="memo" rows="4" class="input textarea"
+                <textarea id="memo-input" name="memo" rows="4" class="input textarea" disabled
                           placeholder="マーカーを選ぶとメモを書けるようになります（開発予定）"></textarea>
                 <button type="button" class="button button--secondary" disabled>メモを保存（開発予定）</button>
               </details>
@@ -247,7 +238,7 @@
         <!-- ========== 画面3：設定（未実装） ========== -->
         <section id="settings-view" class="view" aria-labelledby="settings-heading">
           <div class="page-header">
-            <h2 id="settings-heading" class="page-title">設定</h2>
+            <h2 id="settings-heading" class="page-title" tabindex="-1">設定</h2>
             <p class="page-lead">参考文献の書式・バックアップ・容量の確認などは開発予定です。</p>
           </div>
         </section>
@@ -261,7 +252,7 @@
     </div>
   </div>
 
-  <!-- 動き（JavaScript）は別ファイルに書く。今はまだ空。type="module" は新しい書き方の JavaScript を使う指定 -->
+  <!-- 動き（JavaScript）は別ファイルに書く。type="module" は新しい書き方の JavaScript を使う指定 -->
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>
