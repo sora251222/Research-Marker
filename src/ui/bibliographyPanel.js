@@ -246,17 +246,34 @@ function renderCitation() {
   elements.citationOutput.textContent = result.text || '書誌情報を入力すると、ここに参考文献が表示されます。';
   elements.citationOutput.classList.toggle('is-empty', !result.text);
 
-  const messages = [];
+  // 必須の不足（赤・コピー不可）と、任意の未入力（灰色・コピー可）を分けて表示する
+  const blocks = [];
   if (result.missing.length > 0) {
-    messages.push(`不足している項目：${result.missing.join('、')}。入力するまでコピーできません（「書誌情報を編集」から入力できます）。`);
+    const required = document.createElement('p');
+    required.className = 'citation-missing__required';
+    const label = document.createElement('strong');
+    label.textContent = '入力が必要：';
+    required.append(label, `${result.missing.join('、')}（入力するまでコピーできません）`);
+    const editButton = document.createElement('button');
+    editButton.type = 'button';
+    editButton.className = 'button button--small citation-missing__edit';
+    editButton.textContent = '書誌情報を入力する';
+    editButton.addEventListener('click', () => {
+      openForm();
+      elements.form.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    });
+    blocks.push(required, editButton);
   }
   if (result.warnings.length > 0) {
-    messages.push(`入力されていない項目：${result.warnings.join('、')}（論文によっては不要です）。`);
+    const optional = document.createElement('p');
+    optional.className = 'citation-missing__optional';
+    optional.textContent = `未入力（論文によっては不要）：${result.warnings.join('、')}`;
+    blocks.push(optional);
   }
-  elements.citationMissing.textContent = messages.join(' ');
-  elements.citationMissing.hidden = messages.length === 0;
-  elements.citationMissing.classList.toggle('is-blocking', result.missing.length > 0);
+  elements.citationMissing.replaceChildren(...blocks);
+  elements.citationMissing.hidden = blocks.length === 0;
   elements.copyButton.disabled = !result.canCopy;
+  elements.copyButton.textContent = result.canCopy ? '参考文献をコピー' : '参考文献をコピー（入力が必要）';
 }
 
 async function copyCitation() {
