@@ -2,7 +2,45 @@
 // メモリを節約するため、表示中の1ページだけを描画する。
 
 import { getPaperBundle, getFileBlob } from '../storage/paperRepository.js';
-import { loadPdfDocument, renderPdfPage, describePdfError, destroyPdfDocument } from '../pdf/pdfjs.js';
+import { loadPdfDocument, renderPdfPage, renderTextLayer, describePdfError, destroyPdfDocument } from '../pdf/pdfjs.js';
+
+// ほかの機能（マーカーなど）に「論文を開いた／ページを描いた／閉じた」を知らせるための受け口
+const listeners = {
+  paperOpened: [], // (bundle) => void
+  pageRendered: [], // ({ page, pageIndex, surface }) => void
+  paperClosed: [], // () => void
+};
+
+/** 閲覧画面の出来事を受け取る関数を登録する */
+export function onViewerEvent(name, callback) {
+  listeners[name].push(callback);
+}
+
+function emit(name, payload) {
+  listeners[name].forEach((callback) => {
+    try {
+      callback(payload);
+    } catch (error) {
+      console.error(`閲覧画面の処理（${name}）でエラーが起きました`, error);
+    }
+  });
+}
+
+/** 今表示しているページの情報 */
+export function getCurrentPageInfo() {
+  if (!viewer.bundle) return null;
+  return { page: viewer.bundle.pages[viewer.pageIndex], pageIndex: viewer.pageIndex, paper: viewer.bundle.paper };
+}
+
+/** ページIDで指定したページを表示する（マーカー一覧から移動するときに使う） */
+export async function goToPageById(pageId) {
+  if (!viewer.bundle) return;
+  const index = viewer.bundle.pages.findIndex((page) => page.id === pageId);
+  if (index >= 0 && index !== viewer.pageIndex) {
+    viewer.pageIndex = index;
+    await renderCurrentPage();
+  }
+}
 
 // 拡大率の段階（1 = 表示エリアの幅に合わせた大きさ）
 const ZOOM_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2, 3];
@@ -122,6 +160,7 @@ export async function showPaperInViewer(paperId) {
     viewer.bundle = bundle;
     viewer.pageIndex = 0;
     viewer.zoomIndex = DEFAULT_ZOOM_INDEX;
+    emit('paperOpened', bundle);
     await renderCurrentPage();
   } catch (error) {
     if (token !== viewer.loadToken) return;
@@ -132,6 +171,7 @@ export async function showPaperInViewer(paperId) {
 
 /** 閲覧中の論文を閉じ、メモリを解放する（別の画面に移るときに呼ぶ） */
 export function closeViewer() {
+  const wasOpen = Boolean(viewer.bundle);
   viewer.loadToken += 1;
   viewer.renderHandle?.cancel();
   viewer.renderHandle = null;
@@ -145,6 +185,9 @@ export function closeViewer() {
   releaseCanvases();
   if (elements) {
     elements.bibTitle.textContent = '未取得';
+  }
+  if (wasOpen) {
+    emit('paperClosed');
   }
 }
 
@@ -204,6 +247,21 @@ async function renderCurrentPage() {
       });
       viewer.renderHandle = handle;
       await handle.promise;
+
+      // 文字情報のあるページには、文字を選べる透明なレイヤーを重ねる（マーカー用）
+      if (page.textStatus === 'has-text') {
+        const textContainer = document.createElement('div');
+        textContainer.className = 'textLayer';
+        surface.append(textContainer);
+        const textHandle = renderTextLayer({
+          pdfDocument: viewer.pdfDocument,
+          pageNumber: page.sourceIndex,
+          container: textContainer,
+          cssWidth,
+        });
+        viewer.renderHandle = textHandle;
+        await textHandle.promise;
+      }
     } else {
       const image = document.createElement('img');
       image.className = 'page-image';
@@ -225,6 +283,7 @@ async function renderCurrentPage() {
   }
   releaseCanvases();
   elements.display.replaceChildren(surface);
+  emit('pageRendered', { page, pageIndex: viewer.pageIndex, surface });
 }
 
 /** 画像の表示用URLを作る（同じ論文を開いている間は使い回す） */
@@ -248,9 +307,9 @@ function updateToolbar() {
   elements.zoomIn.disabled = !hasPaper || viewer.zoomIndex === ZOOM_STEPS.length - 1;
 
   const statusText = {
-    'has-text': 'このページ：文字情報あり（文字の選択・マーカーは開発予定）',
-    'no-text': 'このページ：文字情報なし（スキャンの可能性。OCRは開発予定）',
-    image: 'このページ：画像（OCRは開発予定）',
+    'has-text': 'このページ：文字情報あり（文字を選んでマーカーを引けます）',
+    'no-text': 'このページ：文字情報なし（スキャンの可能性。OCR後にマーカーを引けます・OCRは開発予定）',
+    image: 'このページ：画像（OCR後にマーカーを引けます・OCRは開発予定）',
   };
   const page = pages[viewer.pageIndex];
   elements.pageStatus.textContent = page ? statusText[page.textStatus] : '';

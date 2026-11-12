@@ -1417,9 +1417,254 @@ details[open] > .panel-title::after {
 .marker-chip--pink   { --chip-color: var(--marker-pink); }
 .marker-chip--blue   { --chip-color: var(--marker-blue); }
 
+.marker-chip:not(:disabled):hover {
+  background-color: var(--color-hover);
+}
+
+/* 選択中の色：枠を濃くし、「✓」の文字でも示す（色だけに頼らない） */
+.marker-chip[aria-pressed="true"] {
+  border-color: var(--color-accent);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+  font-weight: var(--font-weight-medium);
+}
+
+.marker-chip[aria-pressed="true"]::after {
+  content: "✓";
+  color: var(--color-accent);
+}
+
+.panel-title__count {
+  margin-left: var(--space-1);
+  margin-right: auto;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-normal);
+}
+
+/* マーカー一覧 */
+.marker-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
 .marker-list .empty-message {
   color: var(--color-text-muted);
   font-size: var(--font-size-meta);
+}
+
+.marker-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+}
+
+/* 選択中のマーカー：左側の線と淡い背景で示す */
+.marker-item.is-selected {
+  border-color: var(--color-accent);
+  box-shadow: inset 3px 0 0 var(--color-accent);
+  background-color: #FBFDFC;
+}
+
+.marker-item__main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-1);
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.marker-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}
+
+.marker-dot {
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.marker-dot--yellow { background-color: var(--marker-yellow); }
+.marker-dot--green  { background-color: var(--marker-green); }
+.marker-dot--pink   { background-color: var(--marker-pink); }
+.marker-dot--blue   { background-color: var(--marker-blue); }
+
+/* 選んだ文章：長い場合は3行で省略して表示する（保存している文章は省略しない） */
+.marker-item__quote {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: var(--font-size-meta);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.marker-item__delete {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+/* メモ */
+.memo-target {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-meta);
+  overflow-wrap: anywhere;
+}
+
+.memo-status {
+  min-height: 1.5em;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}
+
+.memo-status.is-error {
+  color: var(--color-danger);
+}
+
+/* 文字を選んだときに出る、色のメニュー（画面に固定して、選んだ場所の近くに出す） */
+.selection-toolbar {
+  position: fixed;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.selection-toolbar__label {
+  padding: 0 var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}
+
+.selection-toolbar .marker-chip {
+  min-height: 2.5rem;
+  padding: var(--space-1) var(--space-2);
+}
+
+/* ---------------------------------------------------------
+   ページの上のレイヤー（下から：canvas → マーカー → 文字を選ぶための透明な文字）
+   --------------------------------------------------------- */
+
+/* マーカー：SVG の座標 0〜1 をページ全体に引き伸ばして描く */
+.highlight-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  mix-blend-mode: multiply; /* 下の文字が読めるように重ねる */
+}
+
+.hl--yellow polygon { fill: var(--marker-yellow); }
+.hl--green polygon  { fill: var(--marker-green); }
+.hl--pink polygon   { fill: var(--marker-pink); }
+.hl--blue polygon   { fill: var(--marker-blue); }
+
+/* 選択中のマーカー：輪郭を描いて示す */
+.hl.is-selected polygon {
+  stroke: var(--color-accent);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke; /* 拡大しても線の太さを変えない */
+}
+
+/* 文字を選ぶための透明な文字（PDF.js の pdf_viewer.css から必要な部分だけを取り出したもの） */
+.textLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: clip;
+  opacity: 1;
+  line-height: 1;
+  text-align: initial;
+  letter-spacing: normal;
+  word-spacing: normal;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  caret-color: CanvasText;
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+}
+
+.textLayer :is(span, br) {
+  position: absolute;
+  color: transparent;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.textLayer > :not(.markedContent),
+.textLayer .markedContent span:not(.markedContent) {
+  z-index: 1;
+  --font-height: 0;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  --scale-x: 1;
+  --rotate: 0deg;
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+
+.textLayer .markedContent {
+  display: contents;
+}
+
+.textLayer span[role="img"] {
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+
+.textLayer ::selection {
+  background: rgba(45, 90, 74, 0.28);
+  color: transparent;
+}
+
+.textLayer br::selection {
+  background: transparent;
+}
+
+.textLayer.selectionRendering ::selection {
+  background: transparent;
+  color: transparent;
+}
+
+.textLayer .endOfContent {
+  position: absolute;
+  inset: 100% 0 0;
+  z-index: 0;
+  display: block;
+  cursor: default;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.textLayer.selecting .endOfContent {
+  top: 0;
 }
 
 .citation-output {

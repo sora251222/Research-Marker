@@ -316,6 +316,15 @@
               <div id="document-display" class="document-display" tabindex="0"
                    aria-label="論文の表示エリア（PageUp・PageDown でページ移動、＋・− で拡大・縮小）">
               </div>
+
+              <!-- 文字を選んだときに、選んだ場所の近くに出る小さなメニュー（動きは src/ui/markerPanel.js） -->
+              <div id="selection-toolbar" class="selection-toolbar" role="toolbar" aria-label="選択した文章にマーカーを引く" hidden>
+                <span class="selection-toolbar__label">マーカー</span>
+                <button type="button" class="marker-chip marker-chip--yellow" data-color="yellow">黄</button>
+                <button type="button" class="marker-chip marker-chip--green" data-color="green">緑</button>
+                <button type="button" class="marker-chip marker-chip--pink" data-color="pink">ピンク</button>
+                <button type="button" class="marker-chip marker-chip--blue" data-color="blue">青</button>
+              </div>
             </section>
 
             <!-- 右側：パネル（書誌情報・マーカー・メモ・参考文献） -->
@@ -339,31 +348,33 @@
                 <p class="note">書誌情報の自動取得・修正は開発予定です。</p>
               </details>
 
-              <!-- マーカー操作 -->
+              <!-- マーカー操作（動きは src/ui/markerPanel.js） -->
               <details class="panel-section" open>
-                <summary class="panel-title">マーカー</summary>
-                <!-- マーカーの色：色だけで区別しないよう、文字でも色名を表示する -->
-                <div class="marker-colors" role="group" aria-label="マーカーの色（開発予定）">
-                  <button type="button" class="marker-chip marker-chip--yellow" disabled>黄</button>
-                  <button type="button" class="marker-chip marker-chip--green" disabled>緑</button>
-                  <button type="button" class="marker-chip marker-chip--pink" disabled>ピンク</button>
-                  <button type="button" class="marker-chip marker-chip--blue" disabled>青</button>
+                <summary class="panel-title">マーカー<span id="marker-count" class="panel-title__count"></span></summary>
+                <p class="note">本文の文字を選ぶと、近くに色のメニューが出ます。下のボタンからも引けます。</p>
+                <!-- マーカーの色：色だけで区別しないよう、文字でも色名を表示する。aria-pressed：選択中の色 -->
+                <div id="marker-colors" class="marker-colors" role="group" aria-label="新しく引くマーカーの色">
+                  <button type="button" class="marker-chip marker-chip--yellow" data-color="yellow" aria-pressed="true">黄</button>
+                  <button type="button" class="marker-chip marker-chip--green" data-color="green" aria-pressed="false">緑</button>
+                  <button type="button" class="marker-chip marker-chip--pink" data-color="pink" aria-pressed="false">ピンク</button>
+                  <button type="button" class="marker-chip marker-chip--blue" data-color="blue" aria-pressed="false">青</button>
                 </div>
                 <button type="button" id="add-marker-button" class="button button--secondary button--block" disabled>
-                  選択した文章にマーカーを引く（開発予定）
+                  選択した文章にマーカーを引く
                 </button>
-                <ul id="marker-list" class="marker-list">
-                  <li class="empty-message">マーカーはまだありません。</li>
-                </ul>
+                <p id="marker-page-note" class="note" hidden></p>
+                <p id="marker-status" class="status-message" role="status" aria-live="polite" hidden></p>
+                <ul id="marker-list" class="marker-list"></ul>
               </details>
 
-              <!-- メモ入力（保存機能がないため、入力欄も無効にしておく） -->
+              <!-- メモ入力（入力をやめて少しすると自動で保存する） -->
               <details class="panel-section" open>
                 <summary class="panel-title">メモ</summary>
-                <label for="memo-input" class="field-label">選択中のマーカーへのメモ</label>
-                <textarea id="memo-input" name="memo" rows="4" class="input textarea" disabled
-                          placeholder="マーカーを選ぶとメモを書けるようになります（開発予定）"></textarea>
-                <button type="button" class="button button--secondary" disabled>メモを保存（開発予定）</button>
+                <p id="memo-target" class="memo-target">マーカーを選ぶと、そのマーカーへのメモを書けます。</p>
+                <label for="memo-input" class="visually-hidden">選択中のマーカーへのメモ</label>
+                <textarea id="memo-input" name="memo" rows="5" class="input textarea" disabled
+                          placeholder="マーカーを選んでからメモを書いてください"></textarea>
+                <p id="memo-status" class="memo-status" role="status" aria-live="polite"></p>
               </details>
 
               <!-- 参考文献・Evernote 用コピー -->

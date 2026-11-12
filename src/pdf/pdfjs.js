@@ -69,6 +69,50 @@ export async function inspectPdfPage(pdfDocument, pageNumber) {
   }
 }
 
+/**
+ * 文字を選べるようにする「テキストレイヤー」を作る。
+ * PDFの文字と同じ位置に、透明な文字を重ねる仕組み（見た目は canvas の絵のまま、選択だけできる）。
+ * @param {object} options
+ * @param {object} options.pdfDocument
+ * @param {number} options.pageNumber 1から始まるページ番号
+ * @param {HTMLElement} options.container 透明な文字を入れる要素（ページの台紙の中）
+ * @param {number} options.cssWidth 画面上の幅（canvas と同じ値）
+ * @returns {{promise: Promise<void>, cancel: () => void}}
+ */
+export function renderTextLayer({ pdfDocument, pageNumber, container, cssWidth }) {
+  let textLayer = null;
+  let cancelled = false;
+
+  const promise = (async () => {
+    const page = await pdfDocument.getPage(pageNumber);
+    if (cancelled) return;
+    const baseViewport = page.getViewport({ scale: 1 });
+    const viewport = page.getViewport({ scale: cssWidth / baseViewport.width });
+
+    // PDF.js のテキストレイヤーは、CSS 変数で拡大率を受け取る
+    container.style.setProperty('--scale-factor', String(viewport.scale));
+    container.style.setProperty('--user-unit', '1');
+    container.style.setProperty('--total-scale-factor', 'calc(var(--scale-factor) * var(--user-unit))');
+    container.style.setProperty('--scale-round-x', '1px');
+    container.style.setProperty('--scale-round-y', '1px');
+
+    textLayer = new pdfjsLib.TextLayer({
+      textContentSource: page.streamTextContent(),
+      container,
+      viewport,
+    });
+    await textLayer.render();
+  })();
+
+  return {
+    promise,
+    cancel: () => {
+      cancelled = true;
+      textLayer?.cancel();
+    },
+  };
+}
+
 /** PDF.js のエラーを、利用者に分かる日本語のメッセージに変える */
 export function describePdfError(error) {
   switch (error?.name) {

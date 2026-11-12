@@ -9,6 +9,7 @@ import { initLibrary, loadPapers, renderPaperList } from './ui/library.js';
 import { initUploadView, renderStoredTable, updateStorageUsage } from './ui/uploadView.js';
 import { initImportPanel } from './ui/importPanel.js';
 import { initViewer, showPaperInViewer, closeViewer } from './ui/viewer.js';
+import { initMarkerPanel } from './ui/markerPanel.js';
 
 /** 保存されている論文を読み込み直し、ライブラリと格納画面の表示をそろえて更新する */
 async function refreshPapers() {
@@ -23,6 +24,7 @@ initLibrary();
 initUploadView({ onChanged: refreshPapers });
 initImportPanel({ onSaved: refreshPapers });
 initViewer();
+initMarkerPanel();
 refreshPapers();
 
 startRouter((route, { isInitial }) => {

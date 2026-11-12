@@ -9,9 +9,11 @@
 //   sourceFiles … 元ファイルの情報（名前・形式・サイズ・SHA-256 など）
 //   fileBlobs   … 元ファイルの中身そのもの（変更しない）
 //   pages       … ページ（表示・OCR・マーカーの単位）
+//   highlights  … マーカーとメモ（版2で追加）
 
 const DB_NAME = 'research-marker-local';
-const DB_VERSION = 1;
+// 版を上げると onupgradeneeded が動き、足りない表だけを追加する（既存のデータは残る）
+const DB_VERSION = 2;
 
 let databasePromise = null;
 
@@ -29,20 +31,30 @@ export function openDatabase() {
 
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-    // 初めて開いたとき（または版を上げたとき）に、表と索引を作る
-    request.onupgradeneeded = () => {
+    // 初めて開いたとき（または版を上げたとき）に、表と索引を作る。
+    // oldVersion（これまでの版）を見て、まだない表だけを作る
+    request.onupgradeneeded = (event) => {
       const db = request.result;
-      const papers = db.createObjectStore('papers', { keyPath: 'id' });
-      papers.createIndex('createdAt', 'createdAt');
 
-      const sourceFiles = db.createObjectStore('sourceFiles', { keyPath: 'id' });
-      sourceFiles.createIndex('paperId', 'paperId');
-      sourceFiles.createIndex('sha256', 'sha256'); // 重複ファイルの検出に使う
+      if (event.oldVersion < 1) {
+        const papers = db.createObjectStore('papers', { keyPath: 'id' });
+        papers.createIndex('createdAt', 'createdAt');
 
-      db.createObjectStore('fileBlobs', { keyPath: 'fileId' });
+        const sourceFiles = db.createObjectStore('sourceFiles', { keyPath: 'id' });
+        sourceFiles.createIndex('paperId', 'paperId');
+        sourceFiles.createIndex('sha256', 'sha256'); // 重複ファイルの検出に使う
 
-      const pages = db.createObjectStore('pages', { keyPath: 'id' });
-      pages.createIndex('paperId', 'paperId');
+        db.createObjectStore('fileBlobs', { keyPath: 'fileId' });
+
+        const pages = db.createObjectStore('pages', { keyPath: 'id' });
+        pages.createIndex('paperId', 'paperId');
+      }
+
+      if (event.oldVersion < 2) {
+        const highlights = db.createObjectStore('highlights', { keyPath: 'id' });
+        highlights.createIndex('paperId', 'paperId');
+        highlights.createIndex('pageId', 'pageId');
+      }
     };
 
     request.onsuccess = () => {
