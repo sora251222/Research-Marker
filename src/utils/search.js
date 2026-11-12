@@ -1,9 +1,12 @@
 // 論文検索に使う文字列処理
 // 画面（DOM）に関係しない「純粋な関数」だけを置くので、自動テストしやすい。
 
+import { normalizeCjk } from './japanese.js';
+
 /**
  * 検索用に文字列をそろえる。
  * - NFKC 正規化：全角英数字「ＡＢＣ１２３」を半角「ABC123」に、半角カナを全角にそろえる
+ * - 日本語PDFに含まれる部首の文字（例：⻑）を通常の漢字（長）にそろえる
  * - 小文字化：英語の大文字・小文字の違いを無視する
  * - 連続する空白（全角スペースを含む）を1つにまとめる
  * 元のデータは変更せず、比較用の新しい文字列を返す。
@@ -12,8 +15,7 @@ export function normalizeForSearch(text) {
   if (text === null || text === undefined) {
     return '';
   }
-  return String(text)
-    .normalize('NFKC')
+  return normalizeCjk(text)
     .toLowerCase()
     .replace(/\s+/g, ' ')
     .trim();

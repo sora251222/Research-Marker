@@ -1753,6 +1753,125 @@ select.input {
   accent-color: var(--color-accent);
 }
 
+/* 取得元の小さなラベル（JaLC・Crossref・PubMed・手入力） */
+.source-tag {
+  display: inline-block;
+  padding: 0 var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* 要確認のラベル */
+.tag--attention {
+  border-color: #E3C77A;
+  background-color: #FFF8E1;
+  color: #6B4F00;
+}
+
+/* 保存完了の表示に書き足す、書誌情報の自動取得の結果 */
+.status-message__sub {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+}
+
+/* DOI・タイトルで探す */
+.bib-lookup__row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.bib-lookup__row .input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 取得した書誌情報・候補 */
+.bib-proposal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background-color: #FBFDFC;
+}
+
+.bib-proposal__title {
+  font-weight: var(--font-weight-medium);
+}
+
+.bib-proposal__check {
+  font-size: var(--font-size-meta);
+}
+
+.bib-proposal__check.is-ok {
+  color: var(--color-accent);
+}
+
+.bib-proposal__check.is-warning {
+  color: #6B4F00;
+}
+
+.bib-proposal__list,
+.bib-candidates {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.bib-proposal__list li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.bib-proposal__label {
+  color: var(--color-text-muted);
+}
+
+.bib-proposal__value {
+  padding-left: 1.625rem;
+  overflow-wrap: anywhere;
+}
+
+.bib-proposal__current {
+  padding-left: 1.625rem;
+  color: #6B4F00;
+  font-size: var(--font-size-small);
+  overflow-wrap: anywhere;
+}
+
+.bib-candidates li {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+}
+
+.bib-candidates__title {
+  font-weight: var(--font-weight-medium);
+  overflow-wrap: anywhere;
+}
+
+.bib-candidates__meta,
+.bib-candidates__credit {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+  overflow-wrap: anywhere;
+}
+
 /* 参考文献の不足項目：必須（赤）と任意（灰色）を分ける */
 .citation-missing {
   display: flex;

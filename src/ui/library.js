@@ -97,6 +97,9 @@ function createPaperItem(paper) {
   if (!paper.title) {
     meta.append(createSpan('tag tag--muted', 'タイトル未設定'));
   }
+  if (paper.bibliographyLookup?.status === 'needs-review') {
+    meta.append(createSpan('tag tag--attention', '書誌情報：要確認'));
+  }
   meta.append(createSpan('tag', 'このブラウザに保存'));
 
   article.append(title, meta);

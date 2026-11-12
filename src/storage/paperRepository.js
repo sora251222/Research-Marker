@@ -141,7 +141,7 @@ async function removePaperBundle(paperId, files, pages) {
 /** 書誌情報として編集できる項目（これ以外の項目は書き換えさせない） */
 export const BIBLIOGRAPHY_FIELDS = [
   'language', 'title', 'titleEn', 'authors', 'authorsEn', 'journal', 'journalAbbr', 'journalAbbrNlm',
-  'year', 'volume', 'issue', 'pageStart', 'pageEnd', 'articleNumber', 'doi',
+  'year', 'volume', 'issue', 'pageStart', 'pageEnd', 'articleNumber', 'doi', 'pmid',
 ];
 
 /** 別の画面（または別のタブ）で先に更新されていたときのエラー */
@@ -154,11 +154,12 @@ export class PaperConflictError extends Error {
 
 /**
  * 書誌情報を更新する。
- * 変わった項目には「取得元：手入力」と日時を記録する（自動取得の値と区別するため）。
+ * 変わった項目には、取得元（sources で指定。指定がなければ「手入力」）と日時を記録する。
  * expectedUpdatedAt と保存されている updatedAt が違えば、上書きせずにエラーにする。
+ * @param {Record<string, string>} [sources] 項目名 → 取得元（'JaLC'・'Crossref'・'PubMed' など）
  * @returns {Promise<object>} 更新後の論文
  */
-export async function updatePaperBibliography(paperId, changes, expectedUpdatedAt) {
+export async function updatePaperBibliography(paperId, changes, expectedUpdatedAt, sources = {}) {
   const now = new Date().toISOString();
   return runTransaction(['papers'], 'readwrite', async ({ papers }) => {
     const current = await requestToPromise(papers.get(paperId));
@@ -174,10 +175,26 @@ export async function updatePaperBibliography(paperId, changes, expectedUpdatedA
       if (!(field in changes)) continue;
       if (JSON.stringify(current[field] ?? null) !== JSON.stringify(changes[field] ?? null)) {
         next[field] = changes[field];
-        next.fieldSources[field] = { source: 'manual', at: now };
+        next.fieldSources[field] = { source: sources[field] ?? 'manual', at: now };
       }
     }
     next.updatedAt = now;
+    papers.put(next);
+    return next;
+  });
+}
+
+/**
+ * 書誌情報の自動取得を試した結果を記録する（同じ論文で何度も自動取得しないため）。
+ * @param {{status: 'applied'|'needs-review'|'not-found'|'unavailable'|'error', sources?: string[]}} info
+ * @returns {Promise<object>} 更新後の論文
+ */
+export async function recordLookupResult(paperId, info) {
+  const now = new Date().toISOString();
+  return runTransaction(['papers'], 'readwrite', async ({ papers }) => {
+    const current = await requestToPromise(papers.get(paperId));
+    if (!current) throw new Error('この論文は見つかりません。');
+    const next = { ...current, bibliographyLookup: { ...info, at: now }, updatedAt: now };
     papers.put(next);
     return next;
   });

@@ -339,10 +339,24 @@
                 <!-- dl：項目名（dt）と値（dd）の組を並べるためのタグ。中身は JavaScript が作る -->
                 <dl id="bibliography" class="bibliography"></dl>
                 <div class="button-row">
+                  <button type="button" id="bib-auto" class="button button--secondary">PDFから書誌情報を取得</button>
                   <button type="button" id="bib-edit" class="button button--secondary">書誌情報を編集</button>
                 </div>
-                <p class="note">DOI などからの自動取得は開発予定です。今は手入力で登録・修正できます。</p>
                 <p id="bib-status" class="status-message" role="status" aria-live="polite" hidden></p>
+
+                <!-- DOI またはタイトルで探す（画像・スキャンPDF、または自動で見つからなかったとき） -->
+                <form id="bib-lookup-form" class="bib-lookup" role="search">
+                  <label for="bib-lookup-query" class="field-label">DOI またはタイトルで探す</label>
+                  <div class="bib-lookup__row">
+                    <input type="search" id="bib-lookup-query" class="input" maxlength="500" autocomplete="off"
+                           placeholder="例：10.1272/jnms1923.51.758／論文タイトルの一部">
+                    <button type="submit" id="bib-lookup-submit" class="button">探す</button>
+                  </div>
+                </form>
+                <p id="bib-lookup-status" class="memo-status" role="status" aria-live="polite"></p>
+
+                <!-- 取得した書誌情報（反映する項目を選ぶ）・候補の一覧（動きは src/ui/bibliographyPanel.js） -->
+                <div id="bib-proposal" class="bib-proposal" hidden></div>
 
                 <!-- 編集フォーム（「書誌情報を編集」を押すと表示） -->
                 <form id="bib-form" class="bib-form" hidden novalidate>

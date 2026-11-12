@@ -8,6 +8,8 @@ import { requestPersistentStorage } from '../storage/paperRepository.js';
 import { formatBytes } from '../utils/format.js';
 import { paperRouteHash } from '../router.js';
 import { createIcon } from './icons.js';
+import { autoFillBibliography } from '../metadata/autofill.js';
+import { LookupError } from '../metadata/lookup.js';
 
 let elements;
 let prepared = null; // analyzeFiles の結果（保存前の状態）
@@ -151,12 +153,52 @@ async function handleSave() {
     setDropZoneStatus('保存が完了しました。続けて別のファイルも追加できます。');
     reveal(elements.status, 'nearest');
     await onSavedCallback(paper);
+    runAutoFillAfterSave(paper); // 書誌情報の自動取得は、保存とは別に裏側で進める（完了を待たない）
   } catch (error) {
     updateProgress(1, '保存できませんでした');
     showStatus('error', describeStorageError(error), error?.existingPaperId ?? null);
     reveal(elements.status, 'nearest');
   } finally {
     setBusy(false);
+  }
+}
+
+// ---------- 保存後の書誌情報の自動取得 ----------
+
+/**
+ * 保存した論文の書誌情報を自動で探し、結果を保存完了の表示に書き足す。
+ * 失敗しても論文の保存には影響しない（あとから論文を開いて取得し直せる）。
+ */
+async function runAutoFillAfterSave(paper) {
+  const note = document.createElement('span');
+  note.className = 'status-message__sub';
+  elements.status.append(note);
+  const say = (text) => {
+    note.textContent = text;
+  };
+
+  if (paper.sourceKind !== 'pdf') {
+    say('画像の論文は、OCR（開発予定）ができるまで書誌情報を自動で読み取れません。論文を開くと、DOI やタイトルで探せます。');
+    return;
+  }
+
+  say('書誌情報を自動で探しています…');
+  try {
+    const outcome = await autoFillBibliography(paper, (message) => say(message));
+    if (outcome.status === 'applied') {
+      say(
+        outcome.appliedCount > 0
+          ? `書誌情報を自動入力しました（取得元：${outcome.sources.join('・')}、${outcome.appliedCount}項目）。論文を開いて確認できます。`
+          : '書誌情報を確認しました。'
+      );
+    } else if (outcome.status === 'needs-review') {
+      say('書誌情報の候補が見つかりました。論文を開いて、内容を確認してから反映してください。');
+    } else {
+      say('書誌情報は自動で見つかりませんでした。論文を開くと、DOI やタイトルで探すか、手入力できます。');
+    }
+    await onSavedCallback(outcome.paper);
+  } catch (error) {
+    say(`書誌情報の自動取得はできませんでした（${error instanceof LookupError ? error.message : error?.message ?? '原因不明'}）。論文を開いて、あとから取得し直せます。`);
   }
 }
 
