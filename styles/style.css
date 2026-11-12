@@ -1,0 +1,957 @@
+/* =========================================================
+   Research Marker スタイルシート
+   方針：ミニマル・落ち着いた配色・大きめの文字・十分な余白
+   ========================================================= */
+
+
+/* ---------------------------------------------------------
+   1. デザインの基本値（CSS変数）
+   色・文字サイズ・余白をここで一元管理する。
+   変更したいときは、ここの値を書き換えるだけで全体に反映される。
+   --------------------------------------------------------- */
+:root {
+  /* 配色 */
+  --color-bg: #FAFAF9;            /* メイン背景（オフホワイト） */
+  --color-surface: #FFFFFF;       /* コンテンツ背景（ホワイト） */
+  --color-sidebar: #F5F5F4;       /* サイドバー背景（淡いグレー） */
+  --color-text: #202020;          /* メイン文字（チャコール） */
+  --color-text-muted: #737373;    /* 補助文字（グレー） */
+  --color-border: #EAEAEA;        /* 境界線（薄いグレー） */
+  --color-hover: #ECECEA;         /* ホバー時の淡い背景 */
+  --color-active: #E7E7E4;        /* 選択中メニューの背景 */
+  --color-accent: #2D5A4A;        /* アクセント（落ち着いた深緑） */
+  --color-accent-hover: #244A3D;  /* アクセントのホバー時 */
+  --color-viewer-bg: #F0F0EE;     /* 論文表示エリアの背景（紙面を引き立てる） */
+  --color-focus: #2D5A4A;         /* キーボード操作時のフォーカス枠 */
+
+  /* マーカーの色（本文の上に半透明で重ねる想定） */
+  --marker-yellow: rgba(250, 204, 21, 0.38);
+  --marker-green: rgba(74, 222, 128, 0.32);
+  --marker-pink: rgba(244, 114, 182, 0.30);
+  --marker-blue: rgba(96, 165, 250, 0.30);
+
+  /* 文字サイズ（rem：ブラウザの基準文字サイズに対する倍率。1rem = 通常16px） */
+  --font-size-page-title: 1.6875rem;  /* 27px：ページの大見出し */
+  --font-size-section: 1.375rem;      /* 22px：セクション見出し */
+  --font-size-paper-title: 1.1875rem; /* 19px：論文タイトル */
+  --font-size-body: 1.0625rem;        /* 17px：通常の本文 */
+  --font-size-ui: 1rem;               /* 16px：ナビ・ボタン・入力欄 */
+  --font-size-meta: 0.96875rem;       /* 15.5px：著者名・発行年などの補助情報 */
+  --font-size-small: 0.9375rem;       /* 15px：バッジなど最小の文字 */
+
+  /* 文字の太さ（太字を多用せず、2段階に絞る） */
+  --font-weight-normal: 400;
+  --font-weight-medium: 600;
+
+  /* 行間 */
+  --line-height-body: 1.65;
+  --line-height-heading: 1.4;
+
+  /* 余白（4の倍数を基本にそろえる） */
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.5rem;   /* 24px */
+  --space-6: 2rem;     /* 32px */
+  --space-7: 3rem;     /* 48px */
+
+  /* 角の丸み（控えめに） */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+
+  /* レイアウトの寸法 */
+  --sidebar-width: 16.5rem;      /* PCのサイドバー幅 */
+  --sidebar-width-compact: 4.75rem; /* タブレットのアイコンだけのサイドバー幅 */
+  --panel-width: 23rem;          /* 論文閲覧画面の右パネル幅 */
+  --content-max-width: 60rem;    /* 一覧などの読みやすい最大幅 */
+  --touch-target: 2.75rem;       /* 44px：タッチしやすい最小の大きさ */
+
+  /* 動き（短く控えめに） */
+  --transition: 150ms ease;
+
+  /* フォント：外部配信は使わず、OSに入っている日本語フォントを使う */
+  --font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI",
+    "Yu Gothic", "Meiryo", "Noto Sans JP", system-ui, sans-serif;
+}
+
+
+/* ---------------------------------------------------------
+   2. 基本設定（全体に共通する土台）
+   --------------------------------------------------------- */
+
+/* 幅の計算に余白と枠線を含める（レイアウトのずれを防ぐ定番の設定） */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+  /* 文字のにじみを抑えて、くっきり表示する */
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  line-height: var(--line-height-heading);
+  font-weight: var(--font-weight-medium);
+}
+
+p {
+  margin: 0;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: inherit;
+}
+
+/* フォーム部品も、ページと同じフォントを使う（ブラウザ標準のままだと小さくなるため） */
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* キーボード操作時のフォーカス表示（マウス操作時には出ない） */
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* 画面には表示しないが、読み上げソフトには伝える（アクセシビリティ用） */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 線で描くアイコンの共通設定（文字の色に合わせて描画する） */
+.icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 補足の説明文 */
+.note {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-meta);
+}
+
+.note strong {
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}
+
+
+/* ---------------------------------------------------------
+   3. 画面全体の枠（サイドバー＋メインの列）
+   CSS Grid：画面を「列」と「行」のマス目に分けて配置する仕組み
+   --------------------------------------------------------- */
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.main-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* 長い文字があっても列がはみ出さないようにする */
+}
+
+main {
+  flex: 1;
+  padding: var(--space-6) var(--space-7);
+}
+
+.site-footer {
+  padding: var(--space-4) var(--space-7) var(--space-5);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}
+
+
+/* ---------------------------------------------------------
+   4. サイドバー
+   --------------------------------------------------------- */
+.sidebar {
+  position: sticky; /* スクロールしてもサイドバーは画面に残る */
+  top: 0;
+  align-self: start; /* Grid の中で sticky を正しく効かせるための指定 */
+  height: 100vh;
+  overflow-y: auto;
+  padding: var(--space-5) var(--space-3);
+  background-color: var(--color-sidebar);
+  border-right: 1px solid var(--color-border);
+}
+
+.app-name {
+  padding: 0 var(--space-3) var(--space-5);
+  font-size: 1.125rem;
+  letter-spacing: 0.01em;
+}
+
+.app-name a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-decoration: none;
+}
+
+/* 頭文字の小さな印（ロゴの代わり。大きなロゴは使わない） */
+.app-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-accent);
+  color: #FFFFFF;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+}
+
+.main-nav ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-ui);
+  text-decoration: none;
+  transition: background-color var(--transition);
+}
+
+a.nav-link:hover {
+  background-color: var(--color-hover);
+}
+
+/* 未実装のメニュー：薄い文字＋「開発予定」の文字で区別する（色だけに頼らない） */
+.nav-link.is-disabled {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.nav-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+
+.badge {
+  font-size: 0.8125rem;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background-color: var(--color-surface);
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+/* 選択中のメニュー：淡い背景＋左側の細い線＋やや太い文字で示す
+   :has() は「〜を含む要素」を選ぶ書き方。表示中の画面に合わせてメニューを強調する */
+body:not(:has(:target)) .nav-link[href="#library-view"],
+body:has(#library-view:target) .nav-link[href="#library-view"],
+body:has(#viewer-view:target) .nav-link[href="#library-view"],
+body:has(#upload-area:target) .nav-link[href="#upload-area"],
+body:has(#settings-view:target) .nav-link[href="#settings-view"] {
+  background-color: var(--color-active);
+  font-weight: var(--font-weight-medium);
+  box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+
+/* ---------------------------------------------------------
+   5. 画面の切り替え（JavaScript を使わない仕組み）
+   URL の末尾が #viewer-view などのとき、その画面だけを表示する。
+   :target は「URL の # の先にある要素」を指す。
+   --------------------------------------------------------- */
+.view {
+  display: none;
+}
+
+.view:target,
+.view:has(:target),
+main:not(:has(:target)) #library-view {
+  display: block;
+}
+
+
+/* ---------------------------------------------------------
+   6. 共通の部品（見出し・ボタン・入力欄）
+   --------------------------------------------------------- */
+.page-header {
+  margin-bottom: var(--space-5);
+}
+
+.page-title {
+  font-size: var(--font-size-page-title);
+}
+
+.page-lead {
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+}
+
+.section-title {
+  font-size: var(--font-size-section);
+  margin-bottom: var(--space-1);
+}
+
+/* ボタンの基本形 */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+  font-size: var(--font-size-ui);
+  line-height: 1.4;
+  white-space: nowrap; /* ボタンの文字を途中で折り返さない */
+  cursor: pointer;
+  transition: background-color var(--transition), border-color var(--transition);
+}
+
+.button:hover {
+  background-color: var(--color-hover);
+}
+
+/* 主要な操作だけアクセントカラーで目立たせる */
+.button--primary {
+  border-color: var(--color-accent);
+  background-color: var(--color-accent);
+  color: #FFFFFF;
+}
+
+.button--primary:hover {
+  background-color: var(--color-accent-hover);
+}
+
+/* 枠線なしの控えめなボタン */
+.button--ghost {
+  border-color: transparent;
+  background-color: transparent;
+}
+
+.button--block {
+  width: 100%;
+}
+
+/* 無効（未実装）のボタン：薄く表示し、押せないカーソルにする。文字でも「開発予定」と示す */
+.button:disabled,
+.icon-button:disabled,
+.marker-chip:disabled {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.button:disabled:hover {
+  background-color: var(--color-surface);
+}
+
+.button--ghost:disabled:hover {
+  background-color: transparent;
+}
+
+/* label をボタンにしたもの：中の input にフォーカスが当たったら枠を表示する */
+.upload-area:focus-within .button {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* 入力欄 */
+.input {
+  width: 100%;
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+  font-size: var(--font-size-ui);
+  transition: border-color var(--transition);
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.input:hover {
+  border-color: #D6D6D3;
+}
+
+.textarea {
+  resize: vertical;
+  line-height: var(--line-height-body);
+}
+
+.field-label {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-meta);
+}
+
+/* 小さな種類ラベル（通常PDF・画像など） */
+.tag {
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-small);
+}
+
+
+/* ---------------------------------------------------------
+   7. 論文ライブラリ画面
+   --------------------------------------------------------- */
+#library-view,
+#settings-view {
+  max-width: var(--content-max-width);
+}
+
+/* 検索欄とアップロードボタンを1行に並べる（Flexbox：横に並べる仕組み） */
+.library-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.search-form {
+  display: flex;
+  flex: 1 1 22rem; /* 広い画面では伸び、狭い画面では折り返す */
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.search-form .input {
+  background-color: var(--color-sidebar);
+}
+
+.search-form .input:focus {
+  background-color: var(--color-surface);
+}
+
+.upload-area {
+  flex: 0 0 auto;
+}
+
+.library-actions + .note {
+  margin-bottom: var(--space-6);
+}
+
+/* 論文一覧：カードではなく、余白と薄い区切り線で並べる */
+.paper-list {
+  margin-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.paper-item {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.paper-item article {
+  padding: var(--space-4) var(--space-2);
+}
+
+.paper-title {
+  font-size: var(--font-size-paper-title);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.55;
+  overflow-wrap: anywhere; /* 長い英単語やURLでも枠からはみ出さない */
+}
+
+.paper-title a {
+  text-decoration: none;
+}
+
+.paper-title a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.paper-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-4);
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-meta);
+}
+
+
+/* ---------------------------------------------------------
+   8. 論文閲覧画面（論文の表示エリアを最優先）
+   --------------------------------------------------------- */
+
+/* 閲覧画面は余白を詰めて、論文を大きく表示する */
+main:has(#viewer-view:target) {
+  padding: var(--space-4) var(--space-5);
+}
+
+.viewer-header {
+  margin-bottom: var(--space-3);
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-ui);
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: var(--color-text);
+}
+
+.viewer-title {
+  font-size: var(--font-size-section);
+  overflow-wrap: anywhere;
+}
+
+/* 表示エリアと右パネルを横に並べる */
+.viewer-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--panel-width);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.document-area {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-viewer-bg);
+  overflow: hidden;
+}
+
+/* コンパクトなツールバー */
+.document-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-5);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color var(--transition);
+}
+
+.icon-button:not(:disabled):hover {
+  background-color: var(--color-hover);
+}
+
+.page-indicator,
+.zoom-indicator {
+  min-width: 4.5rem;
+  text-align: center;
+  font-size: var(--font-size-ui);
+  font-variant-numeric: tabular-nums; /* 数字の幅をそろえ、ページ送りで文字が揺れないようにする */
+}
+
+.ocr-status {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-meta);
+}
+
+/* 論文の表示エリア：画面の高さいっぱいに取り、中でスクロールする */
+.document-display {
+  display: flex;
+  justify-content: center;
+  min-height: 70vh;
+  max-height: calc(100vh - 11rem);
+  padding: var(--space-6) var(--space-5);
+  overflow: auto;
+}
+
+/* 紙面のイメージ：縦横比（A4）を保ったまま、幅に合わせて縮む */
+.page-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 46rem;
+  aspect-ratio: 1 / 1.414;
+  padding: var(--space-6);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+/* 右パネル：控えめに。見出しを押すと開閉できる */
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.panel-section {
+  padding: var(--space-3) 0 var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.panel-section > * + * {
+  margin-top: var(--space-3);
+}
+
+/* 開閉の見出し：ブラウザ標準の三角形を消し、右端に「＋／−」を表示する */
+.panel-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--touch-target);
+  font-size: 1.3125rem; /* 21px */
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  list-style: none;
+}
+
+.panel-title::-webkit-details-marker {
+  display: none;
+}
+
+.panel-title::after {
+  content: "＋";
+  color: var(--color-text-muted);
+  font-size: var(--font-size-ui);
+  font-weight: var(--font-weight-normal);
+}
+
+details[open] > .panel-title::after {
+  content: "−";
+}
+
+/* 書誌情報：項目名と値を2列で並べる */
+.bibliography {
+  margin: 0;
+}
+
+.bibliography div {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-1) 0;
+}
+
+.bibliography dt {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-meta);
+}
+
+.bibliography dd {
+  margin: 0;
+  overflow-wrap: anywhere; /* DOI などの長い文字列を折り返す */
+}
+
+/* マーカーの色の選択肢：色の見本＋色名の文字 */
+.marker-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.marker-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-target);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+  font-size: var(--font-size-ui);
+  cursor: pointer;
+}
+
+/* 色の見本（小さな四角） */
+.marker-chip::before {
+  content: "";
+  width: 1rem;
+  height: 1rem;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background-color: var(--chip-color);
+}
+
+.marker-chip--yellow { --chip-color: var(--marker-yellow); }
+.marker-chip--green  { --chip-color: var(--marker-green); }
+.marker-chip--pink   { --chip-color: var(--marker-pink); }
+.marker-chip--blue   { --chip-color: var(--marker-blue); }
+
+.marker-list .empty-message {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-meta);
+}
+
+.citation-output {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-sidebar);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-meta);
+  overflow-wrap: anywhere;
+}
+
+
+/* ---------------------------------------------------------
+   9. レスポンシブ対応（画面幅に合わせて配置を変える）
+   @media：画面幅などの条件に合うときだけ中の指定を使う
+   --------------------------------------------------------- */
+
+/* タブレット（1023px以下）：サイドバーをアイコンだけにし、閲覧画面は縦に並べる */
+@media (max-width: 1023px) {
+  .app-shell {
+    grid-template-columns: var(--sidebar-width-compact) minmax(0, 1fr);
+  }
+
+  .sidebar {
+    padding: var(--space-4) var(--space-2);
+  }
+
+  /* アプリ名とメニューの文字は画面から隠し、読み上げ用に残す（アイコンと頭文字の印だけを表示） */
+  .app-name {
+    padding: 0 0 var(--space-4);
+  }
+
+  .app-name a {
+    justify-content: center;
+  }
+
+  .nav-link {
+    justify-content: center;
+    padding: var(--space-2);
+  }
+
+  .app-name-text,
+  .nav-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  main {
+    padding: var(--space-5) var(--space-5);
+  }
+
+  .site-footer {
+    padding: var(--space-4) var(--space-5) var(--space-5);
+  }
+
+  /* 閲覧画面：論文を上、パネルを下に */
+  .viewer-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .document-display {
+    max-height: none;
+    min-height: 0;
+  }
+}
+
+/* スマートフォン（767px以下）：サイドバーを画面上部のメニューに変える */
+@media (max-width: 767px) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr; /* 上部メニューは中身の高さだけにし、余った高さはメイン側に回す */
+  }
+
+  /* リンクで画面を移動したとき、上部メニューの下に見出しが隠れないようにする */
+  .view {
+    scroll-margin-top: 4.5rem;
+  }
+
+  .sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    height: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    padding: var(--space-2) var(--space-4);
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    overflow: visible;
+  }
+
+  .app-name {
+    padding: 0;
+    font-size: var(--font-size-ui);
+  }
+
+  /* スマートフォンでは上部に余裕があるので、アプリ名の文字を再び表示する */
+  .app-name-text {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+  }
+
+  .main-nav {
+    flex: 1;
+  }
+
+  .main-nav ul {
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: var(--space-1);
+  }
+
+  /* 開発予定のメニューは、狭い画面では表示しない（押せないので場所を取らせない） */
+  .nav-item--planned {
+    display: none;
+  }
+
+  .nav-link {
+    padding: var(--space-2);
+  }
+
+  /* 選択中の印：左の線の代わりに下線を使う */
+  body:not(:has(:target)) .nav-link[href="#library-view"],
+  body:has(#library-view:target) .nav-link[href="#library-view"],
+  body:has(#viewer-view:target) .nav-link[href="#library-view"],
+  body:has(#upload-area:target) .nav-link[href="#upload-area"],
+  body:has(#settings-view:target) .nav-link[href="#settings-view"] {
+    box-shadow: inset 0 -3px 0 var(--color-accent);
+  }
+
+  main,
+  main:has(#viewer-view:target) {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .site-footer {
+    padding: var(--space-4);
+  }
+
+  .page-title {
+    font-size: 1.5rem; /* 24px：狭い画面でも大きすぎず小さすぎない */
+  }
+
+  /* 検索ボタンは入力欄の下に回す */
+  .search-form {
+    flex-wrap: wrap;
+    flex-basis: 100%;
+  }
+
+  .upload-area,
+  .upload-area .button {
+    width: 100%;
+  }
+
+  .document-display {
+    padding: var(--space-3);
+  }
+
+  .page-placeholder {
+    padding: var(--space-4);
+  }
+
+  .ocr-status {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+/* とても狭いスマートフォン（359px以下）：アプリ名は頭文字の印だけにして、メニューを1行に収める */
+@media (max-width: 359px) {
+  .app-name-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   10. 動きを減らす設定の利用者への配慮
+   OS で「視差効果を減らす」などを選んでいる場合は、動きを止める
+   --------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
