@@ -333,21 +333,97 @@
             <!-- details / summary：見出しを押すと中身を開閉できる HTML の部品 -->
             <aside class="side-panel" aria-label="論文の情報とメモ">
 
-              <!-- 書誌情報（取得できない項目は「未取得」と表示する） -->
+              <!-- 書誌情報（入力されていない項目は「未入力」と表示する。動きは src/ui/bibliographyPanel.js） -->
               <details class="panel-section" open>
                 <summary class="panel-title">書誌情報</summary>
-                <!-- dl：項目名（dt）と値（dd）の組を並べるためのタグ -->
-                <dl id="bibliography" class="bibliography">
-                  <div><dt>タイトル</dt><dd data-field="title">未取得</dd></div>
-                  <div><dt>著者</dt><dd data-field="authors">未取得</dd></div>
-                  <div><dt>発行年</dt><dd data-field="year">未取得</dd></div>
-                  <div><dt>雑誌名</dt><dd data-field="journal">未取得</dd></div>
-                  <div><dt>略誌名</dt><dd data-field="journal-abbr">未取得</dd></div>
-                  <div><dt>巻・号</dt><dd data-field="volume-issue">未取得</dd></div>
-                  <div><dt>ページ</dt><dd data-field="pages">未取得</dd></div>
-                  <div><dt>DOI</dt><dd data-field="doi">未取得</dd></div>
-                </dl>
-                <p class="note">書誌情報の自動取得・修正は開発予定です。</p>
+                <!-- dl：項目名（dt）と値（dd）の組を並べるためのタグ。中身は JavaScript が作る -->
+                <dl id="bibliography" class="bibliography"></dl>
+                <div class="button-row">
+                  <button type="button" id="bib-edit" class="button button--secondary">書誌情報を編集</button>
+                </div>
+                <p class="note">DOI などからの自動取得は開発予定です。今は手入力で登録・修正できます。</p>
+                <p id="bib-status" class="status-message" role="status" aria-live="polite" hidden></p>
+
+                <!-- 編集フォーム（「書誌情報を編集」を押すと表示） -->
+                <form id="bib-form" class="bib-form" hidden novalidate>
+                  <div class="form-field">
+                    <label for="bib-language" class="field-label">論文の言語</label>
+                    <select id="bib-language" name="language" class="input">
+                      <option value="ja">日本語</option>
+                      <option value="en">英語</option>
+                    </select>
+                  </div>
+                  <div class="form-field">
+                    <label for="bib-title" class="field-label">タイトル（原題のまま）</label>
+                    <textarea id="bib-title" name="title" rows="2" class="input textarea" maxlength="1000"></textarea>
+                  </div>
+                  <div class="form-field">
+                    <label for="bib-authors" class="field-label">著者（1行に1名。参考文献に載せる表記で入力）</label>
+                    <textarea id="bib-authors" name="authors" rows="3" class="input textarea" maxlength="5000"
+                              placeholder="例：山田太郎&#10;例：Halpern SD"></textarea>
+                  </div>
+                  <div class="form-field">
+                    <label for="bib-journal" class="field-label">雑誌名（正式名）</label>
+                    <input type="text" id="bib-journal" name="journal" class="input" maxlength="500">
+                  </div>
+                  <div class="form-field">
+                    <label for="bib-journal-abbr" class="field-label">略誌名（日本語論文は医中誌略誌名、英語論文はNLM略誌名）</label>
+                    <input type="text" id="bib-journal-abbr" name="journalAbbr" class="input" maxlength="300"
+                           placeholder="例：日医大医会誌／N Engl J Med">
+                  </div>
+                  <div class="form-row">
+                    <div class="form-field">
+                      <label for="bib-year" class="field-label">発行年</label>
+                      <input type="text" id="bib-year" name="year" class="input" inputmode="numeric" maxlength="4" placeholder="例：2024">
+                    </div>
+                    <div class="form-field">
+                      <label for="bib-volume" class="field-label">巻</label>
+                      <input type="text" id="bib-volume" name="volume" class="input" maxlength="30">
+                    </div>
+                    <div class="form-field">
+                      <label for="bib-issue" class="field-label">号</label>
+                      <input type="text" id="bib-issue" name="issue" class="input" maxlength="30">
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-field">
+                      <label for="bib-page-start" class="field-label">開始ページ</label>
+                      <input type="text" id="bib-page-start" name="pageStart" class="input" maxlength="20">
+                    </div>
+                    <div class="form-field">
+                      <label for="bib-page-end" class="field-label">終了ページ</label>
+                      <input type="text" id="bib-page-end" name="pageEnd" class="input" maxlength="20">
+                    </div>
+                    <div class="form-field">
+                      <label for="bib-article-number" class="field-label">論文番号</label>
+                      <input type="text" id="bib-article-number" name="articleNumber" class="input" maxlength="30" placeholder="例：e012345">
+                    </div>
+                  </div>
+                  <div class="form-field">
+                    <label for="bib-doi" class="field-label">DOI</label>
+                    <input type="text" id="bib-doi" name="doi" class="input" maxlength="300" autocomplete="off" placeholder="例：10.1056/NEJMsa021052">
+                  </div>
+                  <details class="bib-form__nlm">
+                    <summary>日本語論文を NLM 形式で書くための英語表記（任意）</summary>
+                    <div class="form-field">
+                      <label for="bib-title-en" class="field-label">タイトル（英語）</label>
+                      <textarea id="bib-title-en" name="titleEn" rows="2" class="input textarea" maxlength="1000"></textarea>
+                    </div>
+                    <div class="form-field">
+                      <label for="bib-authors-en" class="field-label">著者（英語表記。1行に1名）</label>
+                      <textarea id="bib-authors-en" name="authorsEn" rows="3" class="input textarea" maxlength="5000" placeholder="例：Shimizu Y"></textarea>
+                    </div>
+                    <div class="form-field">
+                      <label for="bib-journal-abbr-nlm" class="field-label">NLM略誌名</label>
+                      <input type="text" id="bib-journal-abbr-nlm" name="journalAbbrNlm" class="input" maxlength="300">
+                    </div>
+                  </details>
+                  <p id="bib-form-error" class="note is-error" role="alert" hidden></p>
+                  <div class="button-row">
+                    <button type="submit" id="bib-save" class="button button--primary">保存</button>
+                    <button type="button" id="bib-cancel" class="button">キャンセル</button>
+                  </div>
+                </form>
               </details>
 
               <!-- マーカー操作（動きは src/ui/markerPanel.js） -->
@@ -380,13 +456,47 @@
               </details>
 
               <!-- 参考文献・Evernote 用コピー -->
-              <details class="panel-section">
+              <details class="panel-section" open>
                 <summary class="panel-title">参考文献</summary>
-                <p id="citation-output" class="citation-output">参考文献（バンクーバー方式）がここに表示されます（開発予定）。</p>
+                <!-- 生成した参考文献（選択してコピーすることもできる） -->
+                <p id="citation-output" class="citation-output" aria-live="polite"></p>
+                <p id="citation-style-label" class="note"></p>
+                <!-- 不足している項目（あると、コピーできない／注意を表示） -->
+                <p id="citation-missing" class="citation-missing" hidden></p>
                 <div class="button-row">
-                  <button type="button" class="button button--secondary" disabled>参考文献をコピー（開発予定）</button>
+                  <button type="button" id="citation-copy" class="button button--primary" disabled>参考文献をコピー</button>
                   <button type="button" class="button button--secondary" disabled>Evernote 用にコピー（開発予定）</button>
                 </div>
+                <p id="citation-copy-status" class="memo-status" role="status" aria-live="polite"></p>
+
+                <!-- 参考文献の設定（このブラウザに記憶する） -->
+                <details class="citation-settings">
+                  <summary>書式の設定</summary>
+                  <div class="form-field">
+                    <label for="citation-style" class="field-label">書式</label>
+                    <select id="citation-style" class="input">
+                      <option value="auto">自動（日本語論文は国内形式、英語論文はNLM形式）</option>
+                      <option value="domestic">国内形式（原題・医中誌略誌名）</option>
+                      <option value="nlm">NLM形式（英語表記）</option>
+                    </select>
+                  </div>
+                  <div class="form-field">
+                    <label for="citation-etal" class="field-label">著者が7名以上のとき（最初の6名のあと）</label>
+                    <select id="citation-etal" class="input">
+                      <option value="et al.">et al.</option>
+                      <option value="ほか">ほか</option>
+                      <option value="他">他</option>
+                    </select>
+                  </div>
+                  <label class="checkbox-field">
+                    <input type="checkbox" id="citation-abbreviate-pages">
+                    ページを省略形にする（例：758-761 → 758-61）
+                  </label>
+                  <label class="checkbox-field">
+                    <input type="checkbox" id="citation-include-doi">
+                    末尾に DOI を付ける
+                  </label>
+                </details>
               </details>
 
             </aside>

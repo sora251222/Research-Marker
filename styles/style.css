@@ -1682,13 +1682,102 @@ details[open] > .panel-title::after {
   top: 0;
 }
 
+/* 未入力の項目 */
+.bibliography dd.is-empty {
+  color: var(--color-text-muted);
+}
+
+/* 書誌情報の編集フォーム */
+.bib-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+}
+
+.form-field {
+  min-width: 0;
+}
+
+.form-field .field-label {
+  margin-bottom: var(--space-1);
+}
+
+/* 巻・号などの短い項目を横に並べる（狭いときは折り返す） */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
+  gap: var(--space-3);
+}
+
+select.input {
+  padding-right: var(--space-3);
+  cursor: pointer;
+}
+
+.bib-form__nlm,
+.citation-settings {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.bib-form__nlm > summary,
+.citation-settings > summary {
+  min-height: 2.25rem;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-meta);
+  cursor: pointer;
+}
+
+.bib-form__nlm[open] > * + *,
+.citation-settings[open] > * + * {
+  margin-top: var(--space-3);
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--font-size-meta);
+  cursor: pointer;
+}
+
+.checkbox-field input {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: 0.2rem;
+  accent-color: var(--color-accent);
+}
+
+/* 参考文献の不足項目 */
+.citation-missing {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-meta);
+}
+
+.citation-missing.is-blocking {
+  color: var(--color-danger);
+}
+
+.citation-output.is-empty {
+  color: var(--color-text-muted);
+}
+
+/* 生成した参考文献：読みやすく、選んでコピーしやすいように本文の文字色で表示する */
 .citation-output {
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-sm);
   background-color: var(--color-sidebar);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-meta);
+  color: var(--color-text);
+  font-size: var(--font-size-ui);
+  line-height: 1.7;
   overflow-wrap: anywhere;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 

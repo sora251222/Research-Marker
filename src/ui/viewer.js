@@ -32,6 +32,13 @@ export function getCurrentPageInfo() {
   return { page: viewer.bundle.pages[viewer.pageIndex], pageIndex: viewer.pageIndex, paper: viewer.bundle.paper };
 }
 
+/** 書誌情報を保存したあとに、開いている論文の情報と見出しを新しい内容にする */
+export function updateCurrentPaper(paper) {
+  if (!viewer.bundle || viewer.bundle.paper.id !== paper.id) return;
+  viewer.bundle = { ...viewer.bundle, paper };
+  setHeading(paper.title ?? paper.displayName, !paper.title);
+}
+
 /** ページIDで指定したページを表示する（マーカー一覧から移動するときに使う） */
 export async function goToPageById(pageId) {
   if (!viewer.bundle) return;
@@ -77,7 +84,6 @@ export function initViewer() {
     zoomOut: document.getElementById('zoom-out'),
     zoomIn: document.getElementById('zoom-in'),
     pageStatus: document.getElementById('ocr-status'),
-    bibTitle: document.querySelector('#bibliography [data-field="title"]'),
   };
 
   elements.prev.addEventListener('click', () => goToPage(viewer.pageIndex - 1));
@@ -145,7 +151,6 @@ export async function showPaperInViewer(paperId) {
 
     const { paper } = bundle;
     setHeading(paper.title ?? paper.displayName, !paper.title);
-    elements.bibTitle.textContent = paper.title ?? '未取得';
 
     if (paper.sourceKind === 'pdf') {
       const blob = await getFileBlob(bundle.files[0].id);
@@ -183,9 +188,6 @@ export function closeViewer() {
   viewer.paperId = null;
   viewer.lastWidth = 0;
   releaseCanvases();
-  if (elements) {
-    elements.bibTitle.textContent = '未取得';
-  }
   if (wasOpen) {
     emit('paperClosed');
   }

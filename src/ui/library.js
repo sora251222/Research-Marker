@@ -82,6 +82,13 @@ function createPaperItem(paper) {
   const meta = document.createElement('p');
   meta.className = 'paper-meta';
   const kindText = paper.sourceKind === 'pdf' ? `PDF・${paper.pageCount}ページ` : `画像・${paper.pageCount}枚`;
+  // 書誌情報が入力されていれば、著者・雑誌名・発行年を先に表示する
+  const authors = paper.authors ?? [];
+  if (authors.length > 0) {
+    meta.append(createSpan('paper-authors', authors.length > 3 ? `${authors.slice(0, 3).join(', ')} ほか` : authors.join(', ')));
+  }
+  if (paper.journalAbbr || paper.journal) meta.append(createSpan('paper-journal', paper.journalAbbr ?? paper.journal));
+  if (paper.year) meta.append(createSpan('paper-year', `${paper.year}年`));
   meta.append(
     createSpan('', kindText),
     createSpan('', formatBytes(paper.totalBytes)),

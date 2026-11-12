@@ -138,6 +138,51 @@ async function removePaperBundle(paperId, files, pages) {
   });
 }
 
+/** 書誌情報として編集できる項目（これ以外の項目は書き換えさせない） */
+export const BIBLIOGRAPHY_FIELDS = [
+  'language', 'title', 'titleEn', 'authors', 'authorsEn', 'journal', 'journalAbbr', 'journalAbbrNlm',
+  'year', 'volume', 'issue', 'pageStart', 'pageEnd', 'articleNumber', 'doi',
+];
+
+/** 別の画面（または別のタブ）で先に更新されていたときのエラー */
+export class PaperConflictError extends Error {
+  constructor() {
+    super('この論文は別の画面で更新されています。画面を開き直してから、もう一度お試しください。');
+    this.name = 'PaperConflictError';
+  }
+}
+
+/**
+ * 書誌情報を更新する。
+ * 変わった項目には「取得元：手入力」と日時を記録する（自動取得の値と区別するため）。
+ * expectedUpdatedAt と保存されている updatedAt が違えば、上書きせずにエラーにする。
+ * @returns {Promise<object>} 更新後の論文
+ */
+export async function updatePaperBibliography(paperId, changes, expectedUpdatedAt) {
+  const now = new Date().toISOString();
+  return runTransaction(['papers'], 'readwrite', async ({ papers }) => {
+    const current = await requestToPromise(papers.get(paperId));
+    if (!current || current.deletedAt) {
+      throw new Error('この論文は見つかりません（削除された可能性があります）。');
+    }
+    if (expectedUpdatedAt && current.updatedAt !== expectedUpdatedAt) {
+      throw new PaperConflictError();
+    }
+
+    const next = { ...current, fieldSources: { ...(current.fieldSources ?? {}) } };
+    for (const field of BIBLIOGRAPHY_FIELDS) {
+      if (!(field in changes)) continue;
+      if (JSON.stringify(current[field] ?? null) !== JSON.stringify(changes[field] ?? null)) {
+        next[field] = changes[field];
+        next.fieldSources[field] = { source: 'manual', at: now };
+      }
+    }
+    next.updatedAt = now;
+    papers.put(next);
+    return next;
+  });
+}
+
 /**
  * 論文を「削除済み」にする（論理削除）。
  * データ自体は消さずに deletedAt（削除日時）を記録し、一覧に表示しないようにするだけ。

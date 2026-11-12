@@ -10,6 +10,7 @@ import { initUploadView, renderStoredTable, updateStorageUsage } from './ui/uplo
 import { initImportPanel } from './ui/importPanel.js';
 import { initViewer, showPaperInViewer, closeViewer } from './ui/viewer.js';
 import { initMarkerPanel } from './ui/markerPanel.js';
+import { initBibliographyPanel } from './ui/bibliographyPanel.js';
 
 /** 保存されている論文を読み込み直し、ライブラリと格納画面の表示をそろえて更新する */
 async function refreshPapers() {
@@ -25,6 +26,7 @@ initUploadView({ onChanged: refreshPapers });
 initImportPanel({ onSaved: refreshPapers });
 initViewer();
 initMarkerPanel();
+initBibliographyPanel({ onChanged: refreshPapers });
 refreshPapers();
 
 startRouter((route, { isInitial }) => {
