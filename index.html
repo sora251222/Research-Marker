@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <!-- 文字コード：日本語を正しく表示するために UTF-8 を指定する -->
+  <meta charset="UTF-8">
+  <!-- スマートフォンでも画面幅に合わせて表示するための設定 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Research Marker</title>
+  <!-- 見た目（CSS）は別ファイルに書く。今はまだ空 -->
+  <link rel="stylesheet" href="/styles/style.css">
+</head>
+<body>
+
+  <!-- ========== ヘッダー：アプリ名とメニュー ========== -->
+  <header class="site-header">
+    <h1 class="app-name">Research Marker</h1>
+    <nav class="main-nav" aria-label="メインメニュー">
+      <ul>
+        <!-- 画面の切り替えは JavaScript の段階で実装する -->
+        <li><a href="#library-view">論文ライブラリ</a></li>
+        <li><a href="#upload-area">アップロード</a></li>
+        <li><a href="#settings-view">設定</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+
+    <!-- ========== 画面1：論文ライブラリ（論文の一覧と検索） ========== -->
+    <section id="library-view" class="view" aria-labelledby="library-heading">
+      <h2 id="library-heading">論文ライブラリ</h2>
+
+      <!-- 論文検索欄（検索機能は未実装） -->
+      <form id="search-form" class="search-form" role="search">
+        <label for="search-input">論文を検索</label>
+        <input type="search" id="search-input" name="keyword"
+               placeholder="タイトル・著者・マーカー・メモで検索">
+        <button type="submit" disabled>検索（開発予定）</button>
+      </form>
+
+      <!-- アップロード（PDF・JPEG・PNG。画像は複数枚を1件の論文にまとめる予定） -->
+      <section id="upload-area" class="upload-area" aria-labelledby="upload-heading">
+        <h3 id="upload-heading">論文を追加</h3>
+        <label for="file-input">PDF または 画像（JPEG・PNG）を選択</label>
+        <!-- accept：選べるファイルの種類を絞る。multiple：画像を複数枚選べるようにする -->
+        <input type="file" id="file-input" name="files"
+               accept="application/pdf,image/jpeg,image/png" multiple>
+        <p class="note">
+          対応予定：通常のPDF・スキャンPDF・画像（JPEG・PNG、複数枚で1件の論文）。<br>
+          ※ ファイルの読み込み・保存は<strong>開発予定</strong>です。今は選択しても何も起きません。
+        </p>
+      </section>
+
+      <!-- 論文一覧（今はサンプル表示。保存機能は未実装） -->
+      <section class="paper-list-area" aria-labelledby="paper-list-heading">
+        <h3 id="paper-list-heading">論文一覧</h3>
+        <p class="note">※ 以下は表示確認用の<strong>サンプル（架空の論文）</strong>です。</p>
+        <ul id="paper-list" class="paper-list">
+          <li class="paper-item">
+            <!-- data-paper-id：将来 JavaScript で「どの論文か」を見分けるための印 -->
+            <article data-paper-id="sample-1">
+              <h4 class="paper-title">【サンプル】日本語論文のタイトルがここに入ります</h4>
+              <p class="paper-meta">
+                <span class="paper-authors">山田太郎, 鈴木花子</span>
+                <span class="paper-year">2024年</span>
+                <span class="paper-filetype">通常PDF</span>
+              </p>
+              <a href="#viewer-view">この論文を開く</a>
+            </article>
+          </li>
+          <li class="paper-item">
+            <article data-paper-id="sample-2">
+              <h4 class="paper-title">【サンプル】Title of an English paper</h4>
+              <p class="paper-meta">
+                <span class="paper-authors">Smith J, Brown A</span>
+                <span class="paper-year">2023年</span>
+                <span class="paper-filetype">画像（3枚）</span>
+              </p>
+              <a href="#viewer-view">この論文を開く</a>
+            </article>
+          </li>
+        </ul>
+      </section>
+    </section>
+
+    <!-- ========== 画面2：論文閲覧（PDF・画像の表示とマーカー・メモ） ========== -->
+    <section id="viewer-view" class="view" aria-labelledby="viewer-heading">
+      <h2 id="viewer-heading">論文閲覧</h2>
+      <a href="#library-view">← 論文ライブラリに戻る</a>
+
+      <div class="viewer-layout">
+
+        <!-- 左側：PDF・画像の表示エリア -->
+        <section class="document-area" aria-labelledby="document-heading">
+          <h3 id="document-heading">PDF・画像の表示</h3>
+
+          <!-- ページ操作（未実装） -->
+          <div class="document-toolbar">
+            <button type="button" disabled>前のページ</button>
+            <span id="page-indicator">― / ― ページ</span>
+            <button type="button" disabled>次のページ</button>
+            <button type="button" disabled>縮小</button>
+            <button type="button" disabled>拡大</button>
+          </div>
+
+          <!-- OCRの状態表示（未実装） -->
+          <p id="ocr-status" class="note">OCRの状態：開発予定</p>
+
+          <!-- ここに PDF.js の描画結果や画像を表示する予定 -->
+          <div id="document-display" class="document-display">
+            <p>論文のPDF・画像がここに表示されます（開発予定）。</p>
+          </div>
+        </section>
+
+        <!-- 右側：パネル（書誌情報・マーカー・メモ・参考文献） -->
+        <aside class="side-panel" aria-label="論文の情報とメモ">
+
+          <!-- 書誌情報（取得できない項目は「未取得」と表示する） -->
+          <section class="panel-section" aria-labelledby="bib-heading">
+            <h3 id="bib-heading">書誌情報</h3>
+            <!-- dl：項目名（dt）と値（dd）の組を並べるためのタグ -->
+            <dl id="bibliography" class="bibliography">
+              <dt>タイトル</dt>   <dd data-field="title">未取得</dd>
+              <dt>著者</dt>       <dd data-field="authors">未取得</dd>
+              <dt>発行年</dt>     <dd data-field="year">未取得</dd>
+              <dt>雑誌名</dt>     <dd data-field="journal">未取得</dd>
+              <dt>略誌名</dt>     <dd data-field="journal-abbr">未取得</dd>
+              <dt>巻・号</dt>     <dd data-field="volume-issue">未取得</dd>
+              <dt>ページ</dt>     <dd data-field="pages">未取得</dd>
+              <dt>DOI</dt>        <dd data-field="doi">未取得</dd>
+            </dl>
+            <p class="note">※ 書誌情報の自動取得・修正は開発予定です。</p>
+          </section>
+
+          <!-- マーカー操作 -->
+          <section class="panel-section" aria-labelledby="marker-heading">
+            <h3 id="marker-heading">マーカー</h3>
+            <button type="button" id="add-marker-button" disabled>
+              選択した文章にマーカーを引く（開発予定）
+            </button>
+            <ul id="marker-list" class="marker-list">
+              <li class="empty-message">マーカーはまだありません。</li>
+            </ul>
+          </section>
+
+          <!-- メモ入力 -->
+          <section class="panel-section" aria-labelledby="memo-heading">
+            <h3 id="memo-heading">メモ</h3>
+            <label for="memo-input">選択中のマーカーへのメモ</label>
+            <textarea id="memo-input" name="memo" rows="4"
+                      placeholder="マーカーを選ぶとメモを書けるようになります"></textarea>
+            <button type="button" disabled>メモを保存（開発予定）</button>
+          </section>
+
+          <!-- 参考文献・Evernote 用コピー -->
+          <section class="panel-section" aria-labelledby="citation-heading">
+            <h3 id="citation-heading">参考文献</h3>
+            <p id="citation-output">参考文献（バンクーバー方式）がここに表示されます（開発予定）。</p>
+            <button type="button" disabled>参考文献をコピー（開発予定）</button>
+            <button type="button" disabled>Evernote 用にコピー（開発予定）</button>
+          </section>
+
+        </aside>
+      </div>
+    </section>
+
+    <!-- ========== 画面3：設定（未実装） ========== -->
+    <section id="settings-view" class="view" aria-labelledby="settings-heading">
+      <h2 id="settings-heading">設定</h2>
+      <p>参考文献の書式・バックアップ・容量の確認などは開発予定です。</p>
+    </section>
+
+  </main>
+
+  <!-- ========== フッター ========== -->
+  <footer class="site-footer">
+    <p>Research Marker（開発中・試作版）</p>
+  </footer>
+
+  <!-- 動き（JavaScript）は別ファイルに書く。今はまだ空。type="module" は新しい書き方の JavaScript を使う指定 -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

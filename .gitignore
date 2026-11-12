@@ -1,0 +1,19 @@
+# npm でインストールしたパッケージ（package.json から再作成できるので記録しない）
+node_modules/
+
+# Vite が作る公開用ファイル（npm run build で再作成できる）
+dist/
+
+# 秘密情報を入れるファイル（絶対に記録しない）
+.env
+.env.*
+
+# 開発とは関係のない画像
+image.png
+
+# 実際の論文PDF・画像などのテスト素材（著作権があるため記録しない）
+tests/private/
+
+# OSやエディタが自動で作るファイル
+.DS_Store
+Thumbs.db
