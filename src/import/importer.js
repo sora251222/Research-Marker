@@ -17,15 +17,34 @@ export class ImportError extends Error {
   }
 }
 
+/** 利用者が「キャンセル」を押して止めたことを表す */
+export class ImportCancelledError extends Error {
+  constructor() {
+    super('取り込みをキャンセルしました。まだ何も保存されていません。');
+    this.name = 'ImportCancelledError';
+  }
+}
+
+/** キャンセルされていたら、その場で処理を止める */
+function throwIfCancelled(signal) {
+  if (signal?.aborted) {
+    throw new ImportCancelledError();
+  }
+}
+
+// 進み具合（0〜1）の配分：読み込みと指紋の計算 → ページの確認
+const READ_SHARE = 0.3;
+
 const MIME_TYPES = { pdf: 'application/pdf', jpeg: 'image/jpeg', png: 'image/png' };
 
 /**
  * 選んだファイルを調べ、保存の準備をする。
  * @param {File[]} files
- * @param {(message: string) => void} onProgress 進み具合の表示
+ * @param {(message: string, fraction: number) => void} onProgress 進み具合（説明と 0〜1 の割合）
+ * @param {AbortSignal} [signal] キャンセルの合図
  * @returns {Promise<{kind: 'pdf'|'images', items: object[]}>}
  */
-export async function analyzeFiles(files, onProgress) {
+export async function analyzeFiles(files, onProgress, signal) {
   // 1. 読み込みの前に、組み合わせと容量をざっと確認する（大きすぎるファイルを読み込まないため）
   const roughEntries = files.map((file) => ({ kind: guessKindFromType(file), size: file.size }));
   const roughError = validateSelection(roughEntries);
@@ -36,7 +55,8 @@ export async function analyzeFiles(files, onProgress) {
   // 2. 1つずつ読み込み、中身の形式を確認して指紋を計算する
   const items = [];
   for (const [index, file] of files.entries()) {
-    onProgress(`ファイルを確認しています（${index + 1} / ${files.length}）…`);
+    throwIfCancelled(signal);
+    onProgress(`ファイルを確認中（${index + 1} / ${files.length}）`, (index / files.length) * READ_SHARE);
     const bytes = await file.arrayBuffer();
     const detectedKind = detectFileKind(new Uint8Array(bytes, 0, Math.min(bytes.byteLength, 1024)));
     const entryError = validateFileEntry({ name: file.name, size: file.size, detectedKind });
@@ -77,14 +97,18 @@ export async function analyzeFiles(files, onProgress) {
   }
 
   // 5. ページの情報を調べる
+  throwIfCancelled(signal);
   if (items[0].kind === 'pdf') {
-    items[0].pages = await inspectPdf(items[0], onProgress);
+    items[0].pages = await inspectPdf(items[0], onProgress, signal);
+    onProgress('確認が完了しました', 1);
     return { kind: 'pdf', items };
   }
   for (const [index, item] of items.entries()) {
-    onProgress(`画像を確認しています（${index + 1} / ${items.length}）…`);
+    throwIfCancelled(signal);
+    onProgress(`画像を確認中（${index + 1} / ${items.length}）`, READ_SHARE + (index / items.length) * (1 - READ_SHARE));
     Object.assign(item, await inspectImage(item));
   }
+  onProgress('確認が完了しました', 1);
   return { kind: 'images', items };
 }
 
@@ -97,7 +121,7 @@ function guessKindFromType(file) {
 }
 
 /** PDFのページ数と、各ページの大きさ・文字情報の有無を調べる */
-async function inspectPdf(item, onProgress) {
+async function inspectPdf(item, onProgress, signal) {
   let pdfDocument;
   try {
     // PDF.js に渡したデータは使えなくなるため、コピーを渡す（元のデータは保存用に残す）
@@ -113,12 +137,16 @@ async function inspectPdf(item, onProgress) {
     }
     const pages = [];
     for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
-      onProgress(`PDFのページを確認しています（${pageNumber} / ${pageCount}）…`);
+      throwIfCancelled(signal);
+      onProgress(
+        `ページを確認中（${pageNumber} / ${pageCount}）`,
+        READ_SHARE + ((pageNumber - 1) / pageCount) * (1 - READ_SHARE)
+      );
       pages.push(await inspectPdfPage(pdfDocument, pageNumber));
     }
     return pages;
   } catch (error) {
-    if (error instanceof ImportError) throw error;
+    if (error instanceof ImportError || error instanceof ImportCancelledError) throw error;
     throw new ImportError(`「${item.name}」：${describePdfError(error)}`);
   } finally {
     await destroyPdfDocument(pdfDocument); // 解析が終わったらメモリを解放する

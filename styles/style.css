@@ -24,6 +24,8 @@
   --color-viewer-bg: #F0F0EE;     /* 論文表示エリアの背景（紙面を引き立てる） */
   --color-focus: #2D5A4A;         /* キーボード操作時のフォーカス枠 */
   --color-danger: #A1281F;        /* エラー（文字でも「エラー：」と示し、色だけに頼らない） */
+  --color-accent-soft: #E8F1EC;   /* 選択中のメニュー・ファイルを置く場所の淡い緑 */
+  --color-pdf: #B42318;           /* PDFのアイコン（PDFであることを見分けやすくする） */
 
   /* マーカーの色（本文の上に半透明で重ねる想定） */
   --marker-yellow: rgba(250, 204, 21, 0.38);
@@ -224,11 +226,38 @@ main {
   position: sticky; /* スクロールしてもサイドバーは画面に残る */
   top: 0;
   align-self: start; /* Grid の中で sticky を正しく効かせるための指定 */
+  display: flex;
+  flex-direction: column; /* 上からアプリ名・メニュー・利用者表示（いちばん下）の順に並べる */
   height: 100vh;
   overflow-y: auto;
   padding: var(--space-5) var(--space-3);
   background-color: var(--color-sidebar);
   border-right: 1px solid var(--color-border);
+}
+
+/* メニューの区切り線 */
+.nav-separator {
+  height: 1px;
+  margin: var(--space-2) var(--space-3);
+  background-color: var(--color-border);
+}
+
+/* サイドバーのいちばん下の利用者表示 */
+.sidebar-account {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: auto;
+  padding: var(--space-4) var(--space-3) 0;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-meta);
+}
+
+.account-note {
+  display: block;
+  width: 100%;
+  font-size: 0.8125rem;
 }
 
 /* アプリ名と開閉ボタンを横に並べる */
@@ -261,18 +290,10 @@ main {
   text-decoration: none;
 }
 
-/* 頭文字の小さな印（ロゴの代わり。大きなロゴは使わない） */
+/* アプリの印（本のアイコン。大きなロゴは使わない） */
 .app-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: var(--radius-sm);
-  background-color: var(--color-accent);
-  color: #FFFFFF;
-  font-size: 0.8125rem;
-  letter-spacing: 0.02em;
+  width: 1.625rem;
+  height: 1.625rem;
 }
 
 .main-nav ul {
@@ -320,10 +341,11 @@ a.nav-link:hover {
   line-height: 1.6;
 }
 
-/* 選択中のメニュー：淡い背景＋左側の細い線＋やや太い文字で示す
+/* 選択中のメニュー：淡い緑の背景＋左側の細い線＋やや太い文字で示す（色だけに頼らない）
    aria-current="page" は JavaScript（src/ui/navigation.js）が付ける */
 .nav-link[aria-current="page"] {
-  background-color: var(--color-active);
+  background-color: var(--color-accent-soft);
+  color: var(--color-accent-hover);
   font-weight: var(--font-weight-medium);
   box-shadow: inset 3px 0 0 var(--color-accent);
 }
@@ -344,7 +366,8 @@ a.nav-link:hover {
   padding: 0 0 var(--space-4);
 }
 
-:where(body[data-sidebar="compact"]) .nav-link {
+:where(body[data-sidebar="compact"]) .nav-link,
+:where(body[data-sidebar="compact"]) .sidebar-account {
   justify-content: center;
   padding: var(--space-2);
 }
@@ -371,6 +394,7 @@ a.nav-link:hover {
 }
 
 body[data-view="library"] #library-view,
+body[data-view="upload"] #upload-view,
 body[data-view="viewer"] #viewer-view,
 body[data-view="settings"] #settings-view,
 body:not([data-view]) #library-view {
@@ -459,10 +483,21 @@ body:not([data-view]) #library-view {
   background-color: transparent;
 }
 
-/* label をボタンにしたもの：中の input にフォーカスが当たったら枠を表示する */
-.upload-area:focus-within .button {
+/* label をボタンにしたもの：隠した input にフォーカスが当たったら、ボタンに枠を表示する */
+.drop-zone:has(#file-input:focus-visible) .button--primary {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
+}
+
+/* 取り消しにくい操作（削除）のボタン */
+.button--danger {
+  border-color: var(--color-danger);
+  background-color: var(--color-danger);
+  color: #FFFFFF;
+}
+
+.button--danger:hover {
+  background-color: #86211A;
 }
 
 .button-row {
@@ -578,22 +613,60 @@ body:not([data-view]) #library-view {
   max-width: var(--content-max-width);
 }
 
-/* 検索欄とアップロードボタンを1行に並べる（Flexbox：横に並べる仕組み） */
-.library-actions {
+/* アップロード画面への入口（点線の枠のカード） */
+.upload-card {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin-bottom: var(--space-3);
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  padding: var(--space-5) var(--space-4);
+  border: 1.5px dashed #D9D9D6;
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  text-align: center;
+  text-decoration: none;
+  transition: border-color var(--transition), background-color var(--transition);
 }
 
+.upload-card:hover {
+  border-color: var(--color-accent);
+  background-color: #FCFDFC;
+}
+
+.upload-card__icon {
+  width: 1.875rem;
+  height: 1.875rem;
+  color: var(--color-text-muted);
+}
+
+.upload-card__title {
+  font-size: var(--font-size-paper-title);
+  font-weight: var(--font-weight-medium);
+}
+
+.upload-card__text {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-meta);
+}
+
+/* 検索欄（左に虫めがねのアイコン） */
 .search-form {
-  display: flex;
-  flex: 1 1 22rem; /* 広い画面では伸び、狭い画面では折り返す */
-  gap: var(--space-2);
-  min-width: 0;
+  position: relative;
+  margin-bottom: var(--space-2);
+}
+
+.search-form__icon {
+  position: absolute;
+  top: 50%;
+  left: var(--space-4);
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
 }
 
 .search-form .input {
+  padding-left: 2.75rem;
   background-color: var(--color-sidebar);
 }
 
@@ -601,30 +674,389 @@ body:not([data-view]) #library-view {
   background-color: var(--color-surface);
 }
 
-.upload-area {
-  flex: 0 0 auto;
-}
-
-.library-actions ~ .note {
+.search-form + .note {
   margin-bottom: var(--space-6);
 }
 
-/* 保存場所の案内：目立ちすぎないよう、淡い背景と細い線だけで区切る */
-.storage-notice {
-  margin-bottom: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+
+/* ---------------------------------------------------------
+   7-2. 論文の格納（アップロード）画面
+   --------------------------------------------------------- */
+#upload-view {
+  max-width: 72rem;
+}
+
+/* アイコン付きの見出し */
+.page-header--with-icon {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.page-header__icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-top: 0.35rem;
+  flex-shrink: 0;
+}
+
+/* ファイルを置く場所と「ポイント」を横に並べる */
+.upload-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22rem;
+  gap: var(--space-5);
+  align-items: start;
+  margin-bottom: var(--space-6);
+}
+
+.drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  border: 1.5px dashed #9DBFAE;
+  border-radius: var(--radius-md);
+  background-color: #F6FAF7;
+  text-align: center;
+  transition: border-color var(--transition), background-color var(--transition);
+}
+
+/* ファイルを重ねているとき：枠を濃くし、文字でも状態が分かるようにする */
+.drop-zone.is-dragover {
+  border-color: var(--color-accent);
+  border-style: solid;
+  background-color: var(--color-accent-soft);
+}
+
+.drop-zone.is-dragover .drop-zone__title::after {
+  content: "（ここで離すと読み込みます）";
+  display: block;
+  color: var(--color-accent);
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-normal);
+}
+
+/* 処理中：新しいファイルを受け付けないことを示す */
+.drop-zone.is-disabled {
+  opacity: 0.6;
+}
+
+.drop-zone__icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--color-accent);
+  stroke-width: 1.5;
+}
+
+.drop-zone__title {
+  font-size: var(--font-size-paper-title);
+  font-weight: var(--font-weight-medium);
+}
+
+.drop-zone__or {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-meta);
+}
+
+.drop-zone__formats {
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}
+
+.drop-zone__formats span {
+  margin: 0 var(--space-2);
+}
+
+/* アップロードのポイント */
+.upload-tips {
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-md);
   background-color: var(--color-sidebar);
   font-size: var(--font-size-meta);
 }
 
-.storage-notice strong {
+.upload-tips__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-ui);
+}
+
+.upload-tips__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+
+.upload-tips__list strong {
   font-weight: var(--font-weight-medium);
 }
 
-.storage-notice .note {
-  margin-top: var(--space-2);
+.upload-tips__sub {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}
+
+.upload-tips__usage {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}
+
+.upload-section {
+  margin-bottom: var(--space-6);
+}
+
+.upload-section > .section-title,
+.section-header {
+  margin-bottom: var(--space-3);
+}
+
+.section-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.section-title__sub {
+  margin-left: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-normal);
+}
+
+/* 進み具合の行 */
+.upload-progress {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+}
+
+.upload-progress__icon .icon {
+  width: 2rem;
+  height: 2rem;
+}
+
+.upload-progress__icon--pdf {
+  color: var(--color-pdf);
+}
+
+.upload-progress__icon--image {
+  color: var(--color-text-muted);
+}
+
+.upload-progress__name {
+  margin-bottom: var(--space-2);
+  overflow-wrap: anywhere;
+}
+
+.progress-track {
+  height: 0.5rem;
+  border-radius: 999px;
+  background-color: var(--color-border);
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background-color: var(--color-accent);
+  transition: width var(--transition);
+}
+
+.upload-progress__text {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-meta);
+  font-variant-numeric: tabular-nums;
+}
+
+.import-panel__title {
+  font-size: var(--font-size-paper-title);
+}
+
+/* 格納された論文の表 */
+.table-wrap {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-meta);
+}
+
+.data-table th,
+.data-table td {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table th {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-normal);
+  white-space: nowrap;
+}
+
+.data-table tbody tr:hover {
+  background-color: #FAFAF9;
+}
+
+.data-table__check {
+  width: 2.75rem;
+}
+
+.data-table input[type="checkbox"] {
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+.data-table__title a {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--font-size-ui);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.data-table__title a:hover span {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.data-table__title .tag {
+  margin-left: var(--space-2);
+}
+
+.data-table__menu {
+  width: 3.25rem;
+  text-align: right;
+}
+
+.sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.sort-button:hover {
+  color: var(--color-text);
+}
+
+.sort-mark {
+  font-size: 0.75rem;
+}
+
+/* 行の「…」メニュー（details/summary で開閉） */
+.row-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.row-menu > summary {
+  list-style: none;
+}
+
+.row-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.row-menu__list {
+  position: absolute;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  min-width: 8rem;
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.row-menu__item {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: 4px;
+  background: none;
+  font-size: var(--font-size-ui);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.row-menu__item:hover {
+  background-color: var(--color-hover);
+}
+
+.row-menu__item--danger {
+  color: var(--color-danger);
+}
+
+/* 確認ダイアログ */
+.confirm-dialog {
+  width: min(32rem, calc(100vw - 2rem));
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+.confirm-dialog::backdrop {
+  background-color: rgba(32, 32, 32, 0.35);
+}
+
+.confirm-dialog__title {
+  margin-bottom: var(--space-3);
+  font-size: 1.25rem;
+}
+
+.confirm-dialog__message {
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.confirm-dialog__actions {
+  justify-content: flex-end;
+  margin-top: var(--space-5);
 }
 
 /* 取り込みの確認パネル */
@@ -1025,6 +1457,11 @@ details[open] > .panel-title::after {
     max-height: 80vh;
     min-height: 0;
   }
+
+  /* 格納画面：ポイントをファイルの置き場所の下に回す */
+  .upload-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* スマートフォン（767px以下）：サイドバーを画面上部のメニューに変える */
@@ -1050,6 +1487,7 @@ details[open] > .panel-title::after {
     z-index: 10;
     height: auto;
     display: flex;
+    flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2) var(--space-4);
@@ -1110,15 +1548,77 @@ details[open] > .panel-title::after {
     font-size: 1.5rem; /* 24px：狭い画面でも大きすぎず小さすぎない */
   }
 
-  /* 検索ボタンは入力欄の下に回す */
-  .search-form {
-    flex-wrap: wrap;
-    flex-basis: 100%;
+  /* 上部メニューでは利用者表示を省く */
+  .sidebar-account {
+    display: none;
   }
 
-  .upload-area,
-  .upload-area .button {
-    width: 100%;
+  /* 進み具合の行：名前とバーを1行目、％とキャンセルを2行目にする */
+  .upload-progress {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .upload-progress__text {
+    grid-column: 2;
+  }
+
+  .upload-progress .button {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+
+  /* 表は、1件ずつ縦に並べる表示に切り替える（横スクロールを出さない） */
+  .data-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .data-table,
+  .data-table tbody,
+  .data-table tr,
+  .data-table td {
+    display: block;
+  }
+
+  .data-table tr {
+    position: relative;
+    padding: var(--space-3) var(--space-3) var(--space-3) 3rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .data-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .data-table td {
+    padding: var(--space-1) 0;
+    border-bottom: none;
+  }
+
+  .data-table td[data-label]::before {
+    content: attr(data-label) "：";
+    color: var(--color-text-muted);
+  }
+
+  .data-table__check {
+    position: absolute;
+    top: var(--space-3);
+    left: var(--space-3);
+    width: auto;
+  }
+
+  .data-table__menu {
+    position: absolute;
+    top: var(--space-1);
+    right: var(--space-1);
+    width: auto;
+  }
+
+  .data-table__title {
+    padding-right: 3rem !important;
   }
 
   .document-display {

@@ -24,8 +24,8 @@
       <div class="sidebar-top">
         <h1 class="app-name">
           <a href="#/library">
-            <!-- 狭い画面でも分かるように、頭文字の小さな印を添える -->
-            <span class="app-mark" aria-hidden="true">RM</span>
+            <!-- 本のアイコン（狭い画面ではアイコンだけを表示する） -->
+            <svg class="icon app-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.5C10.5 5.3 8.3 4.7 4 4.7v13.8c4.3 0 6.5.6 8 1.8 1.5-1.2 3.7-1.8 8-1.8V4.7c-4.3 0-6.5.6-8 1.8zM12 6.5v13.8"/></svg>
             <span class="app-name-text">Research Marker</span>
           </a>
         </h1>
@@ -41,17 +41,24 @@
           <!-- data-nav：今どのメニューを選んでいるかを JavaScript が判断するための印 -->
           <li>
             <a class="nav-link" href="#/library" data-nav="library">
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h6v14H4zM14 5h6v14h-6z"/></svg>
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4 4V20a.5.5 0 0 1-.5.5h-10A.5.5 0 0 1 7 20zM14 3.5v4h4M9.5 12h6M9.5 15.5h6"/></svg>
               <span class="nav-label">論文ライブラリ</span>
             </a>
           </li>
           <li>
             <a class="nav-link" href="#/upload" data-nav="upload">
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>
-              <span class="nav-label">論文を追加</span>
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 15v4.5h14V15"/></svg>
+              <span class="nav-label">アップロード</span>
+            </a>
+          </li>
+          <li>
+            <a class="nav-link" href="#/search" data-nav="search">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/></svg>
+              <span class="nav-label">検索</span>
             </a>
           </li>
           <!-- 未実装の項目：押せないことが分かるよう、リンクにせず「開発予定」と表示する -->
+          <li class="nav-separator nav-item--planned" aria-hidden="true"></li>
           <li class="nav-item--planned">
             <span class="nav-link is-disabled" aria-disabled="true">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h7M14 4l6 6-8 8H6v-6z"/></svg>
@@ -64,14 +71,45 @@
               <span class="nav-label">メモ一覧<span class="badge">開発予定</span></span>
             </span>
           </li>
+          <li class="nav-item--planned">
+            <span class="nav-link is-disabled" aria-disabled="true">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.5h4.5V12c0 2.5-1.3 4-3.5 4.5M14.5 7.5H19V12c0 2.5-1.3 4-3.5 4.5"/></svg>
+              <span class="nav-label">参考文献<span class="badge">開発予定</span></span>
+            </span>
+          </li>
+          <li class="nav-item--planned">
+            <span class="nav-link is-disabled" aria-disabled="true">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8.5l3.5 3.5v13.5H6zM9 12h6M12 9v6"/></svg>
+              <span class="nav-label">Evernote 連携<span class="badge">開発予定</span></span>
+            </span>
+          </li>
+          <li class="nav-item--planned">
+            <span class="nav-link is-disabled" aria-disabled="true">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4.5" width="16" height="15" rx="1.5"/><path d="M4 9.5h16M4 14.5h16M10 4.5v15"/></svg>
+              <span class="nav-label">Excel 出力<span class="badge">開発予定</span></span>
+            </span>
+          </li>
+          <li class="nav-separator nav-item--planned" aria-hidden="true"></li>
           <li>
             <a class="nav-link" href="#/settings" data-nav="settings">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
               <span class="nav-label">設定</span>
             </a>
           </li>
+          <li class="nav-item--planned">
+            <span class="nav-link is-disabled" aria-disabled="true">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.8 9.6a2.3 2.3 0 1 1 3.2 2.1c-.6.3-1 .8-1 1.5v.4M12 16.8v.2"/></svg>
+              <span class="nav-label">ヘルプ<span class="badge">開発予定</span></span>
+            </span>
+          </li>
         </ul>
       </nav>
+
+      <!-- 利用者の表示：ログインは未実装のため、架空の名前は出さない -->
+      <div class="sidebar-account">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="3.5"/><path d="M5 20c1.2-3.4 4-5 7-5s5.8 1.6 7 5"/></svg>
+        <span class="nav-label">ローカル利用中<span class="account-note">ログインは開発予定</span></span>
+      </div>
     </header>
 
     <!-- メインの列：画面の中身とフッター -->
@@ -86,58 +124,21 @@
             <p class="page-lead">保存した論文を探して、開いて読むことができます。</p>
           </div>
 
-          <!-- 検索とアップロードを1行にまとめた操作エリア -->
-          <div class="library-actions">
-            <!-- 論文検索欄：入力すると一覧がすぐに絞り込まれる -->
-            <form id="search-form" class="search-form" role="search">
-              <label for="search-input" class="visually-hidden">論文を検索</label>
-              <input type="search" id="search-input" name="keyword" class="input"
-                     placeholder="タイトル・著者・雑誌名・発行年で検索" autocomplete="off">
-            </form>
+          <!-- アップロード画面への入口（押すと「論文の格納」画面に移る） -->
+          <a href="#/upload" class="upload-card">
+            <svg class="icon upload-card__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3.5H7.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8zM14 3.5V8h4.5M12 17v-6M9.5 13.5 12 11l2.5 2.5"/></svg>
+            <span class="upload-card__title">論文PDFをアップロード</span>
+            <span class="upload-card__text">PDF・画像（JPEG・PNG）を選択して読み込む</span>
+          </a>
 
-            <!-- アップロード（PDF・JPEG・PNG。画像は複数枚を1件の論文にまとめる予定） -->
-            <div id="upload-area" class="upload-area">
-              <!-- label をボタンの見た目にして、押すとファイル選択が開くようにする -->
-              <label for="file-input" class="button button--primary">
-                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-                PDF・画像を追加
-              </label>
-              <!-- accept：選べるファイルの種類を絞る。multiple：画像を複数枚選べるようにする -->
-              <input type="file" id="file-input" name="files" class="visually-hidden"
-                     accept="application/pdf,image/jpeg,image/png" multiple>
-            </div>
-          </div>
-
-          <!-- 取り込み・保存の進み具合と結果を知らせる場所（aria-live：内容が変わると読み上げソフトが読む） -->
-          <p id="upload-status" class="status-message" role="status" aria-live="polite" hidden></p>
-
-          <!-- 取り込みの確認（ファイルを選んだあとに表示。動きは src/ui/importPanel.js） -->
-          <section id="import-panel" class="import-panel" aria-labelledby="import-heading" hidden>
-            <h3 id="import-heading" class="section-title">取り込みの確認</h3>
-            <p id="import-summary" class="note"></p>
-            <ol id="import-file-list" class="import-file-list"></ol>
-            <label for="import-title" class="field-label">論文タイトル（任意）</label>
-            <input type="text" id="import-title" class="input" maxlength="500" autocomplete="off"
-                   placeholder="空欄の場合は「タイトル未設定」として保存します">
-            <div class="button-row import-actions">
-              <button type="button" id="import-save" class="button button--primary">ライブラリに保存</button>
-              <button type="button" id="import-cancel" class="button">取り消す</button>
-            </div>
-          </section>
-
-          <!-- 保存場所についての大切な案内 -->
-          <div class="storage-notice">
-            <p>
-              <strong>開発版のため、論文はこのブラウザの中（IndexedDB）にだけ保存されます。</strong>
-              ブラウザの閲覧データを削除すると消え、別の端末や別のブラウザでは表示されません。
-              クラウド保存とバックアップは開発予定です。元のファイルは必ず手元にも残してください。
-            </p>
-            <p id="storage-usage" class="note"></p>
-          </div>
-
-          <p class="note">
-            マーカー・メモ・本文（OCR結果を含む）の検索は<strong>開発予定</strong>です。
-          </p>
+          <!-- 論文検索欄：入力すると一覧がすぐに絞り込まれる -->
+          <form id="search-form" class="search-form" role="search">
+            <label for="search-input" class="visually-hidden">論文を検索</label>
+            <svg class="icon search-form__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/></svg>
+            <input type="search" id="search-input" name="keyword" class="input"
+                   placeholder="タイトル・著者・雑誌名・発行年・ファイル名で検索" autocomplete="off">
+          </form>
+          <p class="note">マーカー・メモ・本文（OCR結果を含む）の検索は<strong>開発予定</strong>です。</p>
 
           <!-- 論文一覧（中身は src/ui/library.js が作る） -->
           <section class="paper-list-area" aria-labelledby="paper-list-heading">
@@ -147,7 +148,130 @@
           </section>
         </section>
 
-        <!-- ========== 画面2：論文閲覧（PDF・画像の表示とマーカー・メモ） ========== -->
+        <!-- ========== 画面2：論文の格納（アップロード） ========== -->
+        <section id="upload-view" class="view" aria-labelledby="upload-heading">
+          <div class="page-header page-header--with-icon">
+            <svg class="icon page-header__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 15v4.5h14V15"/></svg>
+            <div>
+              <h2 id="upload-heading" class="page-title" tabindex="-1">論文の格納（アップロード）</h2>
+              <p class="page-lead">PDF・スキャンPDF・画像（JPEG / PNG）を取り込み、論文として保存します。</p>
+            </div>
+          </div>
+
+          <div class="upload-grid">
+            <!-- ファイルを置く場所（ドラッグ＆ドロップ、またはボタンで選ぶ。動きは src/ui/uploadView.js） -->
+            <div id="drop-zone" class="drop-zone">
+              <svg class="icon drop-zone__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18.5a4.5 4.5 0 0 1-.7-8.95A6 6 0 0 1 17.8 8a4.25 4.25 0 0 1-.3 10.5zM12 17.5v-6M9.5 14 12 11.5l2.5 2.5"/></svg>
+              <p class="drop-zone__title">ここにファイルをドラッグ＆ドロップ</p>
+              <p class="drop-zone__or">または</p>
+              <!-- label をボタンの見た目にして、押すとファイル選択が開くようにする -->
+              <label for="file-input" class="button button--primary">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7a2 2 0 0 1 2-2H9l2 2h7.5a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg>
+                ファイルを選択
+              </label>
+              <!-- accept：選べるファイルの種類を絞る。multiple：画像を複数枚選べるようにする -->
+              <input type="file" id="file-input" name="files" class="visually-hidden"
+                     accept="application/pdf,image/jpeg,image/png" multiple>
+              <p class="drop-zone__formats">対応形式：PDF、JPEG、PNG<span aria-hidden="true">｜</span>上限：PDF 30MB、画像1枚 20MB、100ページ</p>
+            </div>
+
+            <!-- アップロードのポイント（実際の動作・保存場所だけを書く） -->
+            <aside class="upload-tips" aria-labelledby="upload-tips-heading">
+              <h3 id="upload-tips-heading" class="upload-tips__title">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8v.2"/></svg>
+                アップロードのポイント
+              </h3>
+              <ul class="upload-tips__list">
+                <li>PDF・スキャンPDF・画像（JPEG / PNG）に対応</li>
+                <li>複数の画像をまとめて1件の論文として登録可能（保存前に並べ替えできます）</li>
+                <li>通常PDFとスキャンページが混在したPDFも、ページごとに判定</li>
+                <li>
+                  ファイルは現在、<strong>このブラウザ内（この端末のみ）</strong>に保存されます。
+                  閲覧データを削除すると消えるため、元のファイルは手元にも残してください。
+                  <span class="upload-tips__sub">※ ログインとクラウド保存の実装後に、クラウドへ保存できるようにします。</span>
+                </li>
+              </ul>
+              <p id="storage-usage" class="upload-tips__usage"></p>
+            </aside>
+          </div>
+
+          <!-- アップロード中のファイル（進み具合・確認・保存。動きは src/ui/importPanel.js） -->
+          <section class="upload-section" aria-labelledby="upload-queue-heading">
+            <h3 id="upload-queue-heading" class="section-title">アップロード中のファイル</h3>
+            <p id="upload-queue-empty" class="note">アップロード中のファイルはありません。</p>
+
+            <!-- 進み具合の行 -->
+            <div id="upload-progress" class="upload-progress" hidden>
+              <span id="upload-progress-icon" class="upload-progress__icon" aria-hidden="true"></span>
+              <div class="upload-progress__body">
+                <p id="upload-progress-name" class="upload-progress__name"></p>
+                <div class="progress-track">
+                  <div id="upload-progress-bar" class="progress-bar" role="progressbar"
+                       aria-labelledby="upload-progress-name" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+                </div>
+              </div>
+              <p id="upload-progress-text" class="upload-progress__text"></p>
+              <button type="button" id="upload-progress-cancel" class="button button--small">キャンセル</button>
+            </div>
+
+            <!-- 取り込み・保存の結果を知らせる場所（aria-live：内容が変わると読み上げソフトが読む） -->
+            <p id="upload-status" class="status-message" role="status" aria-live="polite" hidden></p>
+
+            <!-- 取り込みの確認（確認が終わったファイルについて、タイトル入力・並べ替え・保存） -->
+            <section id="import-panel" class="import-panel" aria-labelledby="import-heading" hidden>
+              <h4 id="import-heading" class="import-panel__title">保存前の確認</h4>
+              <p id="import-summary" class="note"></p>
+              <ol id="import-file-list" class="import-file-list"></ol>
+              <label for="import-title" class="field-label">論文タイトル（任意）</label>
+              <input type="text" id="import-title" class="input" maxlength="500" autocomplete="off"
+                     placeholder="空欄の場合は「タイトル未設定」として保存します">
+              <div class="button-row import-actions">
+                <button type="button" id="import-save" class="button button--primary">ライブラリに保存</button>
+                <button type="button" id="import-cancel" class="button">取り消す</button>
+              </div>
+            </section>
+          </section>
+
+          <!-- 格納された論文（表。動きは src/ui/uploadView.js） -->
+          <section class="upload-section" aria-labelledby="stored-heading">
+            <div class="section-header">
+              <h3 id="stored-heading" class="section-title">
+                格納された論文<span id="stored-count" class="section-title__sub"></span>
+              </h3>
+              <button type="button" id="delete-selected" class="button button--small" disabled>
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 7V5h4v2M7 7l1 12.5h8L17 7"/></svg>
+                削除
+              </button>
+            </div>
+            <div class="table-wrap">
+              <table id="stored-table" class="data-table">
+                <thead>
+                  <tr>
+                    <th scope="col" class="data-table__check">
+                      <input type="checkbox" id="select-all" aria-label="すべて選択">
+                    </th>
+                    <th scope="col" aria-sort="none" data-sort-key="title">
+                      <button type="button" class="sort-button" data-sort-key="title">論文タイトル<span class="sort-mark" aria-hidden="true"></span></button>
+                    </th>
+                    <th scope="col">形式</th>
+                    <th scope="col">ページ数</th>
+                    <th scope="col">サイズ</th>
+                    <th scope="col" aria-sort="descending" data-sort-key="createdAt">
+                      <button type="button" class="sort-button" data-sort-key="createdAt">登録日時<span class="sort-mark" aria-hidden="true"></span></button>
+                    </th>
+                    <th scope="col"><span class="visually-hidden">操作</span></th>
+                  </tr>
+                </thead>
+                <tbody id="stored-table-body"></tbody>
+              </table>
+            </div>
+            <p id="stored-empty" class="note" hidden>格納された論文はまだありません。</p>
+            <!-- 削除などの結果を知らせる場所 -->
+            <p id="stored-status" class="status-message" role="status" aria-live="polite" hidden></p>
+          </section>
+        </section>
+
+        <!-- ========== 画面3：論文閲覧（PDF・画像の表示とマーカー・メモ） ========== -->
         <section id="viewer-view" class="view" aria-labelledby="viewer-heading">
           <div class="viewer-header">
             <a href="#/library" class="back-link">← 論文ライブラリに戻る</a>
@@ -256,7 +380,7 @@
           </div>
         </section>
 
-        <!-- ========== 画面3：設定（未実装） ========== -->
+        <!-- ========== 画面4：設定（未実装） ========== -->
         <section id="settings-view" class="view" aria-labelledby="settings-heading">
           <div class="page-header">
             <h2 id="settings-heading" class="page-title" tabindex="-1">設定</h2>
@@ -272,6 +396,18 @@
       </footer>
     </div>
   </div>
+
+  <!-- 確認ダイアログ（削除の前などに表示する。dialog は HTML 標準の部品） -->
+  <dialog id="confirm-dialog" class="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+    <form method="dialog">
+      <h2 id="confirm-title" class="confirm-dialog__title"></h2>
+      <p id="confirm-message" class="confirm-dialog__message"></p>
+      <div class="button-row confirm-dialog__actions">
+        <button type="submit" value="cancel" class="button" autofocus>キャンセル</button>
+        <button type="submit" value="confirm" id="confirm-ok" class="button button--danger"></button>
+      </div>
+    </form>
+  </dialog>
 
   <!-- 動き（JavaScript）は別ファイルに書く。type="module" は新しい書き方の JavaScript を使う指定 -->
   <script type="module" src="/src/main.js"></script>

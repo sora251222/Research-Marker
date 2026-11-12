@@ -1,7 +1,8 @@
 // 画面の切り替え（ルーター）
 // URL の「#」より後ろ（ハッシュ）を読んで、どの画面を表示するかを決める。
 //   #/library        … 論文ライブラリ
-//   #/upload         … 論文ライブラリ（アップロードボタンに移動）
+//   #/upload         … 論文の格納（アップロード）
+//   #/search         … 論文ライブラリ（検索欄に移動）
 //   #/paper/論文ID   … 論文閲覧
 //   #/settings       … 設定
 // ハッシュを使うと、ページを再読み込みしなくても画面を切り替えられ、
@@ -20,7 +21,9 @@ export function parseRoute(hash) {
     case 'library':
       return { view: 'library' };
     case 'upload':
-      return { view: 'library', focusUpload: true };
+      return { view: 'upload' };
+    case 'search':
+      return { view: 'library', focusSearch: true };
     case 'paper':
       return { view: 'viewer', paperId: decodeId(rawId) };
     case 'settings':

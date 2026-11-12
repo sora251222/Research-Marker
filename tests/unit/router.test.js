@@ -11,7 +11,8 @@ describe('parseRoute', () => {
 
   it('各画面のハッシュを正しく読み取る', () => {
     expect(parseRoute('#/library')).toEqual({ view: 'library' });
-    expect(parseRoute('#/upload')).toEqual({ view: 'library', focusUpload: true });
+    expect(parseRoute('#/upload')).toEqual({ view: 'upload' });
+    expect(parseRoute('#/search')).toEqual({ view: 'library', focusSearch: true });
     expect(parseRoute('#/settings')).toEqual({ view: 'settings' });
     expect(parseRoute('#/paper/sample-1')).toEqual({ view: 'viewer', paperId: 'sample-1' });
   });

@@ -1,25 +1,21 @@
-// 論文ライブラリ画面：論文一覧の表示・検索・ファイル選択・保存場所の案内
+// 論文ライブラリ画面：論文一覧の表示と検索
 
 import { appState } from '../state.js';
 import { filterPapers } from '../utils/search.js';
 import { formatBytes, formatDateTime } from '../utils/format.js';
 import { paperRouteHash } from '../router.js';
-import { listPapers, getStorageStatus } from '../storage/paperRepository.js';
-import { startImport } from './importPanel.js';
+import { listPapers } from '../storage/paperRepository.js';
 
 let listElement;
 let resultCountElement;
-let storageUsageElement;
 let loadError = null; // 一覧を読み込めなかったときのメッセージ
 
 export function initLibrary() {
   listElement = document.getElementById('paper-list');
   resultCountElement = document.getElementById('search-result-count');
-  storageUsageElement = document.getElementById('storage-usage');
 
   const searchForm = document.getElementById('search-form');
   const searchInput = document.getElementById('search-input');
-  const fileInput = document.getElementById('file-input');
 
   // 入力するたびに一覧を絞り込む（ボタンを押す必要はない）
   searchInput.addEventListener('input', () => {
@@ -32,26 +28,17 @@ export function initLibrary() {
     event.preventDefault();
   });
 
-  fileInput.addEventListener('change', () => {
-    const files = Array.from(fileInput.files ?? []);
-    // 同じファイルをもう一度選んだときも change が起きるように、選択を空に戻す
-    fileInput.value = '';
-    startImport(files);
-  });
-
   renderPaperList();
 }
 
-/** 保存されている論文を読み込み直して、一覧と容量の表示を更新する */
-export async function refreshLibrary() {
+/** 保存されている論文を読み込み直す（表示の更新は呼び出し側で行う） */
+export async function loadPapers() {
   try {
     appState.papers = await listPapers();
     loadError = null;
   } catch (error) {
     loadError = `保存されている論文を読み込めませんでした（${error?.message ?? '原因不明のエラー'}）。`;
   }
-  renderPaperList();
-  await updateStorageUsage();
 }
 
 /** 検索語に合う論文だけを一覧に表示する */
@@ -66,7 +53,7 @@ export function renderPaperList() {
   if (loadError) {
     resultCountElement.textContent = loadError;
   } else if (appState.papers.length === 0) {
-    resultCountElement.textContent = '論文はまだ登録されていません。「PDF・画像を追加」から登録できます。';
+    resultCountElement.textContent = '論文はまだ登録されていません。上の「論文PDFをアップロード」から登録できます。';
   } else if (matchedPapers.length === 0) {
     resultCountElement.textContent = `「${query}」に一致する論文はありません。`;
   } else if (query) {
@@ -115,19 +102,4 @@ function createSpan(className, text) {
   if (className) span.className = className;
   span.textContent = text;
   return span;
-}
-
-/** ブラウザ内の保存容量の目安を表示する */
-async function updateStorageUsage() {
-  const { usage, quota, persisted } = await getStorageStatus();
-  const parts = [];
-  if (usage !== null && quota !== null) {
-    parts.push(`このブラウザでの使用量：${formatBytes(usage)}（上限の目安 ${formatBytes(quota)}）`);
-  }
-  if (persisted === true) {
-    parts.push('容量不足時に自動で消されにくい設定：有効');
-  } else if (persisted === false) {
-    parts.push('容量不足時に自動で消されにくい設定：未設定（ブラウザが許可しない場合があります）');
-  }
-  storageUsageElement.textContent = parts.join('／');
 }

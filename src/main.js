@@ -5,15 +5,25 @@ import { appState } from './state.js';
 import { startRouter } from './router.js';
 import { applyViewToPage, moveFocusAfterNavigation } from './ui/navigation.js';
 import { initSidebar } from './ui/sidebar.js';
-import { initLibrary, refreshLibrary } from './ui/library.js';
+import { initLibrary, loadPapers, renderPaperList } from './ui/library.js';
+import { initUploadView, renderStoredTable, updateStorageUsage } from './ui/uploadView.js';
 import { initImportPanel } from './ui/importPanel.js';
 import { initViewer, showPaperInViewer, closeViewer } from './ui/viewer.js';
 
+/** 保存されている論文を読み込み直し、ライブラリと格納画面の表示をそろえて更新する */
+async function refreshPapers() {
+  await loadPapers();
+  renderPaperList();
+  renderStoredTable();
+  await updateStorageUsage();
+}
+
 initSidebar();
 initLibrary();
-initImportPanel({ onSaved: refreshLibrary });
+initUploadView({ onChanged: refreshPapers });
+initImportPanel({ onSaved: refreshPapers });
 initViewer();
-refreshLibrary();
+refreshPapers();
 
 startRouter((route, { isInitial }) => {
   appState.route = route;

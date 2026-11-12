@@ -139,6 +139,24 @@ async function removePaperBundle(paperId, files, pages) {
 }
 
 /**
+ * 論文を「削除済み」にする（論理削除）。
+ * データ自体は消さずに deletedAt（削除日時）を記録し、一覧に表示しないようにするだけ。
+ * 誤って削除したときに元に戻せるようにするため（元に戻す画面は開発予定）。
+ * @param {string[]} paperIds
+ */
+export async function softDeletePapers(paperIds) {
+  const now = new Date().toISOString();
+  await runTransaction(['papers'], 'readwrite', async ({ papers }) => {
+    for (const paperId of paperIds) {
+      const paper = await requestToPromise(papers.get(paperId));
+      if (paper && !paper.deletedAt) {
+        papers.put({ ...paper, deletedAt: now, updatedAt: now });
+      }
+    }
+  });
+}
+
+/**
  * ブラウザの保存容量の目安と、消されにくい設定（永続化）の状態を返す。
  * 対応していないブラウザでは null の項目がある。
  */

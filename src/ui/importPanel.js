@@ -1,16 +1,18 @@
-// 取り込み確認パネル
-// ファイルを選ぶ → 確認（画像の並べ替え・タイトル入力）→ 「ライブラリに保存」→ 保存完了の確認、の流れを担当する。
+// アップロード中のファイル（進み具合・キャンセル・保存前の確認・保存）
+// 流れ：ファイルを選ぶ → 確認（進み具合を表示）→ 保存前の確認（タイトル・画像の順番）→ 保存 → 完了の表示
 
-import { analyzeFiles, saveImport, ImportError } from '../import/importer.js';
+import { analyzeFiles, saveImport, ImportError, ImportCancelledError } from '../import/importer.js';
 import { moveItem } from '../import/fileValidation.js';
 import { describeStorageError } from '../storage/db.js';
 import { requestPersistentStorage } from '../storage/paperRepository.js';
 import { formatBytes } from '../utils/format.js';
 import { paperRouteHash } from '../router.js';
+import { createIcon } from './icons.js';
 
 let elements;
 let prepared = null; // analyzeFiles の結果（保存前の状態）
-let isBusy = false; // 処理中は二重に実行しない
+let isBusy = false; // 確認中・保存中は、次の取り込みを受け付けない
+let abortController = null; // 確認中のキャンセル用
 let thumbnailUrls = []; // 画像のプレビュー用URL（使い終わったら解放する）
 let onSavedCallback = () => {};
 
@@ -24,14 +26,18 @@ export function initImportPanel({ onSaved }) {
     save: document.getElementById('import-save'),
     cancel: document.getElementById('import-cancel'),
     status: document.getElementById('upload-status'),
+    queueEmpty: document.getElementById('upload-queue-empty'),
+    progress: document.getElementById('upload-progress'),
+    progressIcon: document.getElementById('upload-progress-icon'),
+    progressName: document.getElementById('upload-progress-name'),
+    progressBar: document.getElementById('upload-progress-bar'),
+    progressText: document.getElementById('upload-progress-text'),
+    progressCancel: document.getElementById('upload-progress-cancel'),
   };
 
   elements.save.addEventListener('click', handleSave);
-  elements.cancel.addEventListener('click', () => {
-    if (isBusy) return;
-    closePanel();
-    hideStatus();
-  });
+  elements.cancel.addEventListener('click', cancelImport);
+  elements.progressCancel.addEventListener('click', cancelImport);
 
   // 画像の並べ替え・取り除くボタン（一覧の中のボタンをまとめて受け付ける）
   elements.list.addEventListener('click', (event) => {
@@ -61,51 +67,118 @@ export function initImportPanel({ onSaved }) {
   });
 }
 
-/** ファイルが選ばれたときに呼ぶ。内容を調べて確認パネルを表示する */
+/** 確認中・保存中かどうか（ほかの画面部品が二重の取り込みを防ぐために使う） */
+export function isImportBusy() {
+  return isBusy;
+}
+
+/** ファイルが選ばれたときに呼ぶ。内容を調べて、保存前の確認を表示する */
 export async function startImport(fileList) {
   const files = Array.from(fileList ?? []);
-  if (files.length === 0 || isBusy) return;
+  if (files.length === 0) return;
+  if (isBusy) {
+    showStatus('info', '別のファイルを処理中です。終わってからもう一度選んでください。');
+    return;
+  }
 
   closePanel();
+  hideStatus();
   setBusy(true);
-  showStatus('progress', 'ファイルを確認しています…');
+  abortController = new AbortController();
+  showProgress(files);
+
   try {
-    prepared = await analyzeFiles(files, (message) => showStatus('progress', message));
+    prepared = await analyzeFiles(
+      files,
+      (message, fraction) => updateProgress(fraction, message),
+      abortController.signal
+    );
+    updateProgress(1, '確認完了・保存前の確認待ち');
     renderPanel();
     showStatus('info', '内容を確認して「ライブラリに保存」を押してください。まだ保存されていません。');
     elements.title.focus();
   } catch (error) {
     prepared = null;
-    if (error instanceof ImportError) {
+    hideProgress();
+    if (error instanceof ImportCancelledError) {
+      showStatus('info', error.message);
+    } else if (error instanceof ImportError) {
       showStatus('error', error.message, error.existingPaperId);
     } else {
       showStatus('error', `ファイルを確認できませんでした（${error?.message ?? '原因不明のエラー'}）。`);
     }
   } finally {
+    abortController = null;
     setBusy(false);
   }
+}
+
+/** キャンセル：確認中なら処理を止め、確認待ちなら取り込みを取りやめる（保存中は止めない） */
+function cancelImport() {
+  if (abortController) {
+    abortController.abort(); // 確認処理が次の区切りで止まる
+    return;
+  }
+  if (isBusy) return; // 保存中は途中で止めない（半端な保存を防ぐため）
+  closePanel();
+  hideProgress();
+  showStatus('info', '取り込みを取り消しました。まだ何も保存されていません。');
 }
 
 async function handleSave() {
   if (isBusy || !prepared || prepared.items.length === 0) return;
 
   setBusy(true);
-  showStatus('progress', '保存しています…。完了するまでページを閉じないでください。');
+  updateProgress(1, '保存中…（このページを閉じないでください）');
+  elements.progressCancel.disabled = true;
   try {
     const paper = await saveImport(prepared, { title: elements.title.value });
     // 保存と内容の確認が終わってから「完了」と表示する
     await requestPersistentStorage();
     closePanel();
+    hideProgress();
     showStatus('success', '保存が完了しました（このブラウザ内に保存）。', paper.id, '開く');
     await onSavedCallback(paper);
   } catch (error) {
+    updateProgress(1, '保存できませんでした');
     showStatus('error', describeStorageError(error), error?.existingPaperId ?? null);
   } finally {
     setBusy(false);
   }
 }
 
-/** 確認パネルの中身を作る */
+// ---------- 進み具合の行 ----------
+
+function showProgress(files) {
+  const isPdf = files[0].name.toLowerCase().endsWith('.pdf');
+  elements.progressIcon.replaceChildren(createIcon(isPdf ? 'pdf' : 'image'));
+  elements.progressIcon.className = `upload-progress__icon upload-progress__icon--${isPdf ? 'pdf' : 'image'}`;
+  const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
+  elements.progressName.textContent =
+    files.length === 1 ? files[0].name : `${files[0].name} ほか${files.length - 1}件（合計 ${formatBytes(totalBytes)}）`;
+  elements.progressCancel.disabled = false;
+  elements.progress.hidden = false;
+  elements.queueEmpty.hidden = true;
+  updateProgress(0, '準備中');
+}
+
+/** 進み具合を更新する。％は「確認処理の進み具合」を表す（読み込んだMB数ではない） */
+function updateProgress(fraction, message) {
+  const percent = Math.round(Math.min(Math.max(fraction, 0), 1) * 100);
+  elements.progressBar.style.width = `${percent}%`;
+  elements.progressBar.setAttribute('aria-valuenow', String(percent));
+  elements.progressBar.setAttribute('aria-valuetext', `${percent}%、${message}`);
+  elements.progressText.textContent = `${percent}%（${message}）`;
+}
+
+function hideProgress() {
+  elements.progress.hidden = true;
+  elements.queueEmpty.hidden = false;
+}
+
+// ---------- 保存前の確認 ----------
+
+/** 保存前の確認の中身を作る */
 function renderPanel() {
   const { items, kind } = prepared;
   releaseThumbnails();
@@ -199,7 +272,10 @@ function setBusy(busy) {
   elements.cancel.disabled = busy;
   elements.title.disabled = busy;
   document.getElementById('file-input').disabled = busy;
+  document.getElementById('drop-zone').classList.toggle('is-disabled', busy);
 }
+
+// ---------- 状態メッセージ ----------
 
 /**
  * 状態メッセージを表示する。

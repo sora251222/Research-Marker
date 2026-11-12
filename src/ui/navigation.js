@@ -13,8 +13,8 @@ export function applyViewToPage(route) {
   if (route.view === 'viewer') {
     activeNav = 'library';
   }
-  if (route.focusUpload) {
-    activeNav = 'upload';
+  if (route.focusSearch) {
+    activeNav = 'search';
   }
 
   document.querySelectorAll('[data-nav]').forEach((link) => {
@@ -33,18 +33,19 @@ export function applyViewToPage(route) {
  */
 export function moveFocusAfterNavigation(route, { isInitial }) {
   window.scrollTo(0, 0);
-  if (isInitial && !route.focusUpload) {
+
+  if (route.focusSearch) {
+    // 「検索」を選んだときは、検索欄にフォーカスを移してすぐ入力できるようにする
+    document.getElementById('search-input')?.focus();
     return;
   }
-
-  if (route.focusUpload) {
-    // 「論文を追加」を選んだときは、ファイル選択の部品にフォーカスを移す
-    document.getElementById('file-input')?.focus();
+  if (isInitial) {
     return;
   }
 
   const headingIds = {
     library: 'library-heading',
+    upload: 'upload-heading',
     viewer: 'viewer-heading',
     settings: 'settings-heading',
   };
