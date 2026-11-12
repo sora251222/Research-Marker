@@ -769,6 +769,21 @@ body:not([data-view]) #library-view {
   margin: 0 var(--space-2);
 }
 
+/* ファイル置き場の中の、処理状況の短い表示 */
+.drop-zone__status {
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+  color: var(--color-accent-hover);
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-medium);
+}
+
+.drop-zone__status.is-error {
+  color: var(--color-danger);
+}
+
 /* アップロードのポイント */
 .upload-tips {
   padding: var(--space-4) var(--space-5);
@@ -1703,9 +1718,25 @@ details[open] > .panel-title::after {
     min-height: 0;
   }
 
-  /* 格納画面：ポイントをファイルの置き場所の下に回す */
+  /* 格納画面：1列にし、「アップロードのポイント」はページのいちばん下に回す。
+     （ファイルを選んだあとの進み具合・保存ボタンが、選択ボタンのすぐ下に来るようにする）
+     display: contents：枠を消して、中身を親の並びに直接参加させる指定 */
+  body[data-view="upload"] #upload-view {
+    display: flex;
+    flex-direction: column;
+  }
+
   .upload-grid {
-    grid-template-columns: minmax(0, 1fr);
+    display: contents;
+  }
+
+  .drop-zone {
+    margin-bottom: var(--space-6);
+  }
+
+  .upload-tips {
+    order: 1;
+    margin-bottom: var(--space-6);
   }
 }
 

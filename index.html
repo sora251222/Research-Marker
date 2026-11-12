@@ -173,6 +173,8 @@
               <input type="file" id="file-input" name="files" class="visually-hidden"
                      accept="application/pdf,image/jpeg,image/png" multiple>
               <p class="drop-zone__formats">対応形式：PDF、JPEG、PNG<span aria-hidden="true">｜</span>上限：PDF 30MB、画像1枚 20MB、100ページ</p>
+              <!-- 選んだファイルの処理状況を、ボタンのすぐ近くにも短く表示する（詳しい内容は下の「アップロード中のファイル」） -->
+              <p id="drop-zone-status" class="drop-zone__status" aria-hidden="true" hidden></p>
             </div>
 
             <!-- アップロードのポイント（実際の動作・保存場所だけを書く） -->

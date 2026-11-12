@@ -33,6 +33,7 @@ export function initImportPanel({ onSaved }) {
     progressBar: document.getElementById('upload-progress-bar'),
     progressText: document.getElementById('upload-progress-text'),
     progressCancel: document.getElementById('upload-progress-cancel'),
+    dropZoneStatus: document.getElementById('drop-zone-status'),
   };
 
   elements.save.addEventListener('click', handleSave);
@@ -86,6 +87,8 @@ export async function startImport(fileList) {
   setBusy(true);
   abortController = new AbortController();
   showProgress(files);
+  setDropZoneStatus(`「${files[0].name}」${files.length > 1 ? ` ほか${files.length - 1}件` : ''}を確認しています…`);
+  reveal(elements.progress, 'nearest'); // 進み具合が画面の外にあるときは、見える位置までスクロールする
 
   try {
     prepared = await analyzeFiles(
@@ -96,17 +99,23 @@ export async function startImport(fileList) {
     updateProgress(1, '確認完了・保存前の確認待ち');
     renderPanel();
     showStatus('info', '内容を確認して「ライブラリに保存」を押してください。まだ保存されていません。');
-    elements.title.focus();
+    setDropZoneStatus('確認が終わりました。下の「保存前の確認」で「ライブラリに保存」を押してください。');
+    reveal(elements.progress, 'start'); // 進み具合から保存ボタンまでが見えるようにする
+    elements.title.focus({ preventScroll: true });
   } catch (error) {
     prepared = null;
     hideProgress();
     if (error instanceof ImportCancelledError) {
       showStatus('info', error.message);
+      setDropZoneStatus('');
     } else if (error instanceof ImportError) {
       showStatus('error', error.message, error.existingPaperId);
+      setDropZoneStatus('エラー：取り込めませんでした。理由は下に表示しています。');
     } else {
       showStatus('error', `ファイルを確認できませんでした（${error?.message ?? '原因不明のエラー'}）。`);
+      setDropZoneStatus('エラー：取り込めませんでした。理由は下に表示しています。');
     }
+    reveal(elements.status, 'nearest');
   } finally {
     abortController = null;
     setBusy(false);
@@ -122,6 +131,7 @@ function cancelImport() {
   if (isBusy) return; // 保存中は途中で止めない（半端な保存を防ぐため）
   closePanel();
   hideProgress();
+  setDropZoneStatus('');
   showStatus('info', '取り込みを取り消しました。まだ何も保存されていません。');
 }
 
@@ -138,10 +148,13 @@ async function handleSave() {
     closePanel();
     hideProgress();
     showStatus('success', '保存が完了しました（このブラウザ内に保存）。', paper.id, '開く');
+    setDropZoneStatus('保存が完了しました。続けて別のファイルも追加できます。');
+    reveal(elements.status, 'nearest');
     await onSavedCallback(paper);
   } catch (error) {
     updateProgress(1, '保存できませんでした');
     showStatus('error', describeStorageError(error), error?.existingPaperId ?? null);
+    reveal(elements.status, 'nearest');
   } finally {
     setBusy(false);
   }
@@ -273,6 +286,26 @@ function setBusy(busy) {
   elements.title.disabled = busy;
   document.getElementById('file-input').disabled = busy;
   document.getElementById('drop-zone').classList.toggle('is-disabled', busy);
+}
+
+// ---------- 画面の外にある表示を見せる ----------
+
+/**
+ * 要素が画面の外にあるときに、見える位置までスクロールする。
+ * （狭い画面では、進み具合や保存ボタンがファイル選択ボタンより下の、画面の外に出るため）
+ * @param {HTMLElement} element
+ * @param {'start'|'nearest'} block start：要素の上端を画面の上に合わせる／nearest：見えるだけ動かす
+ */
+function reveal(element, block) {
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  element.scrollIntoView({ block, behavior: reduceMotion ? 'auto' : 'smooth' });
+}
+
+/** ファイル置き場の中に、処理状況を短く表示する（空文字なら隠す） */
+function setDropZoneStatus(text) {
+  elements.dropZoneStatus.textContent = text;
+  elements.dropZoneStatus.hidden = !text;
+  elements.dropZoneStatus.classList.toggle('is-error', text.startsWith('エラー'));
 }
 
 // ---------- 状態メッセージ ----------
