@@ -9,7 +9,7 @@ import { formatBytes } from '../utils/format.js';
 import { paperRouteHash } from '../router.js';
 import { createIcon } from './icons.js';
 import { autoFillBibliography } from '../metadata/autofill.js';
-import { LookupError } from '../metadata/lookup.js';
+import { LookupError, METADATA_LOOKUP_AVAILABLE, LOOKUP_UNAVAILABLE_MESSAGE } from '../metadata/lookup.js';
 
 let elements;
 let prepared = null; // analyzeFiles の結果（保存前の状態）
@@ -177,6 +177,10 @@ async function runAutoFillAfterSave(paper) {
     note.textContent = text;
   };
 
+  if (!METADATA_LOOKUP_AVAILABLE) {
+    say(LOOKUP_UNAVAILABLE_MESSAGE);
+    return;
+  }
   if (paper.sourceKind !== 'pdf') {
     say('画像の論文は、OCR（開発予定）ができるまで書誌情報を自動で読み取れません。論文を開くと、DOI やタイトルで探せます。');
     return;

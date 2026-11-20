@@ -207,6 +207,25 @@ textarea {
   margin-top: var(--space-1);
 }
 
+.boot-message a {
+  color: inherit;
+  font-weight: var(--font-weight-medium);
+}
+
+/* 公開版（お試し版）のお知らせ：落ち着いた緑の帯 */
+.demo-banner {
+  margin: 0;
+  padding: var(--space-2) var(--space-5);
+  border-bottom: 1px solid #C7DDD1;
+  background-color: var(--color-accent-soft);
+  color: var(--color-accent-hover);
+  font-size: var(--font-size-meta);
+}
+
+.demo-banner strong {
+  font-weight: var(--font-weight-medium);
+}
+
 .boot-message code {
   padding: 0 var(--space-1);
   border-radius: 4px;

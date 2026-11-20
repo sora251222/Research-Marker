@@ -15,7 +15,7 @@ import {
   compareWithCurrent,
   applyRows,
 } from '../metadata/autofill.js';
-import { lookupByDoi, LookupError } from '../metadata/lookup.js';
+import { lookupByDoi, LookupError, METADATA_LOOKUP_AVAILABLE, LOOKUP_UNAVAILABLE_MESSAGE } from '../metadata/lookup.js';
 import { recordLookupResult } from '../storage/paperRepository.js';
 
 // 取得元の表示名
@@ -182,8 +182,10 @@ function renderBibliography() {
 
   elements.editButton.disabled = !currentPaper || !elements.form.hidden;
   elements.autoButton.disabled = !currentPaper || lookupBusy;
-  elements.autoButton.hidden = currentPaper?.sourceKind === 'images';
-  elements.lookupSubmit.disabled = !currentPaper || lookupBusy;
+  // 画像の論文と、自動取得が使えない公開版では「PDFから書誌情報を取得」を出さない
+  elements.autoButton.hidden = currentPaper?.sourceKind === 'images' || !METADATA_LOOKUP_AVAILABLE;
+  elements.lookupSubmit.disabled = !currentPaper || lookupBusy || !METADATA_LOOKUP_AVAILABLE;
+  elements.lookupQuery.disabled = !METADATA_LOOKUP_AVAILABLE;
 }
 
 // ---------- 書誌情報の自動取得 ----------
@@ -194,6 +196,10 @@ let lookupBusy = false;
 function runLookupOnOpen() {
   const lookup = currentPaper?.bibliographyLookup;
   if (!currentPaper) return;
+  if (!METADATA_LOOKUP_AVAILABLE) {
+    setLookupStatus(LOOKUP_UNAVAILABLE_MESSAGE);
+    return;
+  }
   if (currentPaper.sourceKind === 'images') {
     setLookupStatus('画像から文字を読み取るには OCR（開発予定）が必要です。上の欄に DOI かタイトルを入力すると探せます。');
     return;
@@ -211,6 +217,10 @@ function runLookupOnOpen() {
  */
 async function runLookup(trigger) {
   if (!currentPaper || lookupBusy) return;
+  if (!METADATA_LOOKUP_AVAILABLE) {
+    setLookupStatus(LOOKUP_UNAVAILABLE_MESSAGE);
+    return;
+  }
   const paperId = currentPaper.id;
   let query = '';
   if (trigger === 'query') {

@@ -15,6 +15,12 @@ import { initBibliographyPanel } from './src/ui/bibliographyPanel.js';
 // JavaScript が正しく動き出したので、起動の案内（index.html の #boot-message）を消す
 document.getElementById('boot-message')?.remove();
 
+// 公開版（npm run build で作ったもの。GitHub Pages など）のときだけ、お試し版のお知らせを出す
+// import.meta.env.DEV：開発用サーバーで動いているときだけ true になる（Vite が用意する値）
+if (!import.meta.env.DEV) {
+  document.getElementById('demo-banner').hidden = false;
+}
+
 /** 保存されている論文を読み込み直し、ライブラリと格納画面の表示をそろえて更新する */
 async function refreshPapers() {
   await loadPapers();

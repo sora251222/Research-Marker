@@ -1,0 +1,66 @@
+# GitHub Pages への自動公開
+#
+# main ブランチにプッシュするたびに、GitHub が次の処理を自動で行う。
+#   1. このリポジトリの内容を取り出す
+#   2. 公開用のファイルを作る（npm ci → npm test → npm run build。PDF.js の補助ファイルもここで用意される）
+#   3. できあがった dist フォルダを GitHub Pages に置く
+# 公開先：https://sora251222.github.io/Research-Marker/
+#
+# GitHub 公式のひな形（actions/starter-workflows の pages/static.yml）をもとに、
+# ビルドの手順を加えたもの。各部品の版は 2026-11-20 時点の最新版。
+
+name: GitHub Pages に公開
+
+on:
+  push:
+    branches: [main]
+  # GitHub の「Actions」タブから、手動で実行し直すこともできる
+  workflow_dispatch:
+
+# 公開に必要な最小限の権限だけを与える
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 公開が重なったときは、実行中の公開を最後まで終わらせる
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリの内容を取り出す
+        uses: actions/checkout@v7.0.1
+
+      - name: Node.js を用意する
+        uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: パッケージをインストールする（package-lock.json のとおりの版）
+        run: npm ci
+
+      - name: 自動テストを実行する（失敗したら公開しない）
+        run: npm test
+
+      - name: 公開用のファイルを作る
+        run: npm run build
+
+      - name: GitHub Pages の設定を読み込む
+        uses: actions/configure-pages@v6.0.0
+
+      - name: 公開用のファイル（dist）をまとめる
+        uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: dist
+
+      - name: GitHub Pages に公開する
+        id: deployment
+        uses: actions/deploy-pages@v5.0.1

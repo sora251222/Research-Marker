@@ -22,9 +22,23 @@
   <div id="boot-message" class="boot-message" role="alert">
     <p><strong>画面の動き（JavaScript）を読み込めていません。</strong></p>
     <p>
-      このアプリは開発用サーバーで動かします。ターミナルで <code>npm install</code>（初回のみ）と
-      <code>npm run dev</code> を実行し、表示された <code>http://localhost:5173/</code> を開いてください。
       index.html を直接開くと、見た目だけが表示され、ボタンなどは動きません。
+      <strong>操作を試すには、公開版
+      <a href="https://sora251222.github.io/Research-Marker/">https://sora251222.github.io/Research-Marker/</a>
+      を開いてください</strong>（ダウンロードや準備は不要です）。
+    </p>
+    <p>
+      手元で動かす場合は、ターミナルで <code>npm install</code>（初回のみ）と <code>npm run dev</code> を実行し、
+      表示された <code>http://localhost:5173/</code> を開いてください。
+    </p>
+  </div>
+
+  <!-- 公開版（GitHub Pages）のお知らせ：script.js が、公開版のときだけ表示する -->
+  <div id="demo-banner" class="demo-banner" role="note" hidden>
+    <p>
+      <strong>お試し公開版です。</strong>
+      取り込んだ論文・マーカー・メモは<strong>このブラウザの中だけ</strong>に保存され、他の人には見えません。
+      書誌情報の自動取得は使えません（手入力はできます）。
     </p>
   </div>
 

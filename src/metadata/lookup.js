@@ -10,6 +10,18 @@
 
 import { parseJalcRecord, parseCrossrefWork, parsePubmedSummary, cleanText } from './parsers.js';
 
+/**
+ * 書誌情報の自動取得が使えるか。
+ * 外部APIの中継は開発用サーバー（npm run dev）にしかないため、
+ * GitHub Pages などの公開版（npm run build で作ったもの）では使えない。
+ * import.meta.env.DEV：開発用サーバーで動いているときだけ true になる（Vite が用意する値）
+ */
+export const METADATA_LOOKUP_AVAILABLE = import.meta.env.DEV;
+
+/** 公開版で書誌情報の自動取得を使おうとしたときの案内 */
+export const LOOKUP_UNAVAILABLE_MESSAGE =
+  'この公開版では、書誌情報の自動取得は使えません（開発用サーバーで起動したときだけ使えます）。「書誌情報を編集」から入力できます。';
+
 const API = {
   jalc: '/api/jalc',
   crossref: '/api/crossref',
