@@ -6,8 +6,9 @@
   <!-- スマートフォンでも画面幅に合わせて表示するための設定 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Research Marker</title>
-  <!-- 見た目（CSS）は別ファイルに書く -->
-  <link rel="stylesheet" href="/styles/style.css">
+  <!-- 見た目（CSS）は別ファイルに書く。
+       「./」＝このHTMLと同じフォルダから読み込む（どの開き方でも見つかるようにするため） -->
+  <link rel="stylesheet" href="./styles/style.css">
 </head>
 <body>
 
@@ -15,6 +16,17 @@
   <noscript>
     <p class="noscript-message">Research Marker を使うには、ブラウザの JavaScript を有効にしてください。</p>
   </noscript>
+
+  <!-- 起動の案内：JavaScript（src/main.js）が動き出すと消える。
+       index.html を直接開いた場合など、JavaScript を読み込めなかったときだけ残って表示される -->
+  <div id="boot-message" class="boot-message" role="alert">
+    <p><strong>画面の動き（JavaScript）を読み込めていません。</strong></p>
+    <p>
+      このアプリは開発用サーバーで動かします。ターミナルで <code>npm install</code>（初回のみ）と
+      <code>npm run dev</code> を実行し、表示された <code>http://localhost:5173/</code> を開いてください。
+      index.html を直接開くと、見た目だけが表示され、ボタンなどは動きません。
+    </p>
+  </div>
 
   <!-- 画面全体の枠：左にサイドバー、右にメインの列を並べる -->
   <div class="app-shell">
@@ -547,6 +559,6 @@
   </dialog>
 
   <!-- 動き（JavaScript）は別ファイルに書く。type="module" は新しい書き方の JavaScript を使う指定 -->
-  <script type="module" src="/src/main.js"></script>
+  <script type="module" src="./src/main.js"></script>
 </body>
 </html>

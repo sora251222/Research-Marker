@@ -193,6 +193,26 @@ textarea {
   transition: grid-template-columns var(--transition); /* サイドバー開閉の短い動き */
 }
 
+/* JavaScript を読み込めなかったときの起動の案内（JavaScript が動くと消える） */
+.boot-message {
+  margin: 0;
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid #E3C77A;
+  background-color: #FFF8E1;
+  color: #4A3700;
+  font-size: var(--font-size-meta);
+}
+
+.boot-message p + p {
+  margin-top: var(--space-1);
+}
+
+.boot-message code {
+  padding: 0 var(--space-1);
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
 /* JavaScript が無効なときの案内 */
 .noscript-message {
   margin: 0;

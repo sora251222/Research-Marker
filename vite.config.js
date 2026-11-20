@@ -31,6 +31,10 @@ const proxy = {
 };
 
 export default defineConfig({
+  // 公開用ファイル（npm run build）の CSS・JavaScript を「./」から読み込む書き方にする。
+  // 「/」から始める書き方だと、サイトのいちばん上以外の場所（例：GitHub Pages の /Research-Marker/）に
+  // 置いたときに見つからなくなるため。
+  base: './',
   server: { proxy },
   preview: { proxy },
 });
