@@ -28,7 +28,7 @@
 
 ```
 ┌──────────────── ブラウザ（あなたのPC） ────────────────┐
-│  index.html ─ styles/style.css ─ src/main.js            │
+│  index.html ─ style.css ─ script.js                     │
 │     │                                                    │
 │     ├ 画面（src/ui/）  ライブラリ・格納・閲覧・パネル     │
 │     ├ PDF（src/pdf/）  PDF.js で描画・文字の取り出し       │
@@ -180,11 +180,13 @@ PDF の文書情報・1〜2ページ目の文字
 
 ```
 index.html                 画面の構造
-styles/style.css           見た目（CSS変数・レスポンシブ）
+style.css                  見た目（CSS変数・レスポンシブ）
+script.js                  動きの入り口（src/ の各機能を読み込んで開始する）
+design-note.md             どんなサイトか・改善したところ（開発者が記入）
 vite.config.js             開発サーバーの設定（外部APIの中継）
 scripts/copy-pdfjs-assets.mjs  PDF.js の補助ファイルのコピー
+.github/workflows/         GitHub Pages への自動公開
 src/
-  main.js                  入り口
   router.js / state.js     画面の切り替え・アプリの状態
   ui/                      画面部品（library, uploadView, importPanel, viewer,
                            markerPanel, bibliographyPanel, sidebar, navigation,

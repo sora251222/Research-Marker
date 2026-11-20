@@ -8,7 +8,7 @@
   <title>Research Marker</title>
   <!-- 見た目（CSS）は別ファイルに書く。
        「./」＝このHTMLと同じフォルダから読み込む（どの開き方でも見つかるようにするため） -->
-  <link rel="stylesheet" href="./styles/style.css">
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 
@@ -17,7 +17,7 @@
     <p class="noscript-message">Research Marker を使うには、ブラウザの JavaScript を有効にしてください。</p>
   </noscript>
 
-  <!-- 起動の案内：JavaScript（src/main.js）が動き出すと消える。
+  <!-- 起動の案内：JavaScript（script.js）が動き出すと消える。
        index.html を直接開いた場合など、JavaScript を読み込めなかったときだけ残って表示される -->
   <div id="boot-message" class="boot-message" role="alert">
     <p><strong>画面の動き（JavaScript）を読み込めていません。</strong></p>
@@ -559,6 +559,6 @@
   </dialog>
 
   <!-- 動き（JavaScript）は別ファイルに書く。type="module" は新しい書き方の JavaScript を使う指定 -->
-  <script type="module" src="./src/main.js"></script>
+  <script type="module" src="./script.js"></script>
 </body>
 </html>
